@@ -24,3 +24,24 @@ Scripts available in einkaufsliste-svelte-skeleton@0.0.1 via `npm run-script`:
   format
     prettier --plugin-search-dir . --write .
 ```
+
+## Deployment
+
+Example deploying frontend in docker compose file:
+
+```yaml
+services:
+  frontend:
+    container_name: einkaufsliste-frontend
+    hostname: einkaufsliste-frontend
+    image: einkaufsliste-svelte:latest
+    restart: unless-stopped
+    environment:
+      - "ORIGIN=http://localhost:3000"
+    ports:
+      - 3000:3000
+```
+
+The environment variable `ORIGIN` can be set in the `.env` file when building the docker image or in the docker-compose file.
+
+The environment variable `API_BASE` **MUST BE SET in the `.env` file when building the docker image!!**

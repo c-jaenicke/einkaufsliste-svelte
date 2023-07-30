@@ -28,8 +28,4 @@
 <ItemListing items={data.itemsOld} stores={data.stores} buttonText="Nochmal" />
 
 <style lang="postcss">
-	.list-item {
-		padding-top: 0rem;
-		padding-bottom: 0rem;
-	}
 </style>
