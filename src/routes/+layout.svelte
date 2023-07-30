@@ -1,53 +1,38 @@
-<script>
-	import Header from './Header.svelte';
-	import './styles.css';
+<script lang="ts">
+	import '@skeletonlabs/skeleton/themes/theme-skeleton.css';
+	import '@skeletonlabs/skeleton/styles/skeleton.css';
+	import '../app.postcss';
+	import { AppBar, AppShell, LightSwitch } from '@skeletonlabs/skeleton';
 </script>
 
-<div class="app">
-	<Header />
-
-	<main>
+<AppShell>
+	<svelte:fragment slot="header">
+		<AppBar>
+			<svelte:fragment slot="lead">
+				<a href="/">
+					<strong class="text-xl uppercase">Einkaufsliste</strong>
+				</a>
+				<a href="/more"> Mehr </a>
+			</svelte:fragment>
+			<svelte:fragment slot="trail">
+				<LightSwitch />
+			</svelte:fragment>
+		</AppBar>
+	</svelte:fragment>
+	<div class="page">
+		<br />
 		<slot />
-	</main>
+	</div>
+</AppShell>
 
-	<footer>
-		<p>visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to learn SvelteKit</p>
-	</footer>
-</div>
-
-<style>
-	.app {
-		display: flex;
-		flex-direction: column;
-		min-height: 100vh;
+<style lang="postcss">
+	.page {
+		margin: 0;
+		height: 100%;
+		width: 100vw;
 	}
 
-	main {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		padding: 1rem;
-		width: 100%;
-		max-width: 64rem;
-		margin: 0 auto;
-		box-sizing: border-box;
-	}
-
-	footer {
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		align-items: center;
-		padding: 12px;
-	}
-
-	footer a {
-		font-weight: bold;
-	}
-
-	@media (min-width: 480px) {
-		footer {
-			padding: 12px 0;
-		}
+	a {
+		margin-right: 1.5rem;
 	}
 </style>
