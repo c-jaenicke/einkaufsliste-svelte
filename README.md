@@ -37,7 +37,7 @@ services:
     image: einkaufsliste-svelte:latest
     restart: unless-stopped
     environment:
-      - "ORIGIN=http://localhost:3000"
+      - 'ORIGIN=http://localhost:3000'
     ports:
       - 3000:3000
 ```

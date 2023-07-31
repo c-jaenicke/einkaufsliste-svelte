@@ -5,6 +5,9 @@
 	/** @type {JSON[]}*/
 	export let stores;
 
+	/** @type {JSON[]}*/
+	export let categories;
+
 	/** type {string} */
 	export let buttonText;
 
@@ -33,13 +36,29 @@
 		}
 		return 'keiner';
 	}
+
+	/**
+	 * @param {number} id
+	 * @returns {string}
+	 */
+	function categoryIdToColor(id) {
+		for (let i = 0; i < categories.length; i++) {
+			if (categories[i].id === id) {
+				return categories[i].color;
+			}
+		}
+		return '#ffffff';
+	}
 </script>
 
 <dl class="list-dl">
 	{#each items as item}
 		<div class="list-item">
-			<!--<span class="badge variant-filled">Kat💀</span>-->
-			<span class="flex-auto">
+			<span
+				class="badge-icon variant-filled border-2 border-black"
+				style="background-color: {categoryIdToColor(item.category_id)}"
+			/>
+			<span class="flex-auto" style="margin-left: 8px">
 				<a href="/item/{item.id}">
 					<dt class="font-bold">{item.amount} x {item.name}</dt>
 					{#if item.store_id !== undefined}

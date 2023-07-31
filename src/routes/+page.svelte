@@ -17,7 +17,12 @@
 
 <h1 class="h3">Zu kaufen: {data.itemsNew.length} Artikel</h1>
 
-<ItemListing items={data.itemsNew} stores={data.stores} buttonText="Gekauft" />
+<ItemListing
+	items={data.itemsNew}
+	stores={data.stores}
+	buttonText="Gekauft"
+	categories={data.categories}
+/>
 
 <br />
 <hr class="!border-t-4" />
@@ -25,7 +30,12 @@
 
 <h1 class="h3">Vergangene Einkäufe:</h1>
 
-<ItemListing items={data.itemsOld} stores={data.stores} buttonText="Nochmal" />
+<ItemListing
+	items={data.itemsOld}
+	stores={data.stores}
+	buttonText="Nochmal"
+	categories={data.categories}
+/>
 
 <style lang="postcss">
 </style>

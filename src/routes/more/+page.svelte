@@ -25,6 +25,8 @@
 	</a>
 </div>
 
+<br />
+
 <h1 class="h3">Läden</h1>
 
 <dl class="list-dl">
@@ -54,6 +56,10 @@
 	{#each data.cats as item}
 		{#if item.id !== 1}
 			<div class="list-item">
+				<span
+					class="badge-icon variant-filled border-2 border-black"
+					style="background-color: {item.color}"
+				/>
 				<span class="flex-auto">
 					<a href="/item/{item.id}">
 						<dt class="font-bold">{item.name}</dt>
