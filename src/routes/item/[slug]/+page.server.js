@@ -12,9 +12,9 @@ export async function load({ params }) {
 	const stores = await respStores.json();
 
 	const respCats = await fetch(API_BASE + '/category/all');
-	const cats = await respCats.json();
+	const categories = await respCats.json();
 
-	return { item, stores, cats };
+	return { item, stores, categories };
 }
 
 /** @type {import('./$types').Actions} */

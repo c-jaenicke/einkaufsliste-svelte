@@ -1,16 +1,19 @@
 import { API_BASE } from '$env/static/private';
 
-export async function load() {
+/** @type {import('./$types').PageServerLoad} */
+export async function load({ params }) {
+	const name = params.slug;
+
+	const resp = await fetch(API_BASE + '/item/specific/?type=category&name=' + name);
+	const items = await resp.json();
+
 	const respStores = await fetch(API_BASE + '/stores/all');
 	const stores = await respStores.json();
 
-	const respCategories = await fetch(API_BASE + '/category/all');
-	const categories = await respCategories.json();
+	const respCats = await fetch(API_BASE + '/category/all');
+	const categories = await respCats.json();
 
-	const respAll = await fetch(API_BASE + '/item/all');
-	const items = await respAll.json();
-
-	return { stores, categories, items };
+	return { name, items, stores, categories };
 }
 
 /** @type {import('./$types').Actions} */

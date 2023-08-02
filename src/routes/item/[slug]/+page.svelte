@@ -2,6 +2,7 @@
 	export let data;
 
 	/**
+	 * Convert the id of a store an item has, to the name of the store
 	 * @param {number} id
 	 * @returns {string}
 	 */
@@ -12,6 +13,20 @@
 			}
 		}
 		return 'keiner';
+	}
+
+	/**
+	 * Convert the id of a category an item has, to the name of that category
+	 * @param {number} id
+	 * @returns {string}
+	 */
+	function categoryIdToName(id) {
+		for (let i = 0; i < data.categories.length; i++) {
+			if (data.categories[i].id === id) {
+				return data.categories[i].name;
+			}
+		}
+		return 'keine';
 	}
 </script>
 
@@ -54,11 +69,13 @@
 	<label class="label">
 		<span>Kategorie</span>
 		<select class="select" name="cat">
-			<option value={data.item.category_id} selected
-				>{data.cats[data.item.category_id - 1].name}</option
-			>
-			{#each data.cats as cat}
-				<option value={cat.id}>{cat.name}</option>
+			{#if data.item.category_id !== undefined}
+				<option value={data.item.category_id} selected
+					>{categoryIdToName(data.item.category_id)}</option
+				>
+			{/if}
+			{#each data.categories as category}
+				<option value={category.id}>{category.name}</option>
 			{/each}
 		</select>
 	</label>

@@ -1,17 +1,18 @@
 <script>
-	/** @type {JSON[]}*/
+	/** @type {{id: number, name: string, note: string, amount: number, status: string, store_id: number, category_id: number, edges: Object}[]}*/
 	export let items;
 
-	/** @type {JSON[]}*/
+	/** @type {{id:number , name: string, edges: Object}[]}*/
 	export let stores;
 
-	/** @type {JSON[]}*/
+	/** @type {{id:number , name: string, color: string, edges: Object}[]}*/
 	export let categories;
 
-	/** type {string} */
+	/** @type {string} */
 	export let buttonText;
 
 	/**
+	 * Shorten a string to length of 20 characters and append '...'
 	 * @param {string} str - string to be shortened
 	 * @returns {string} shortened string
 	 */
@@ -25,6 +26,7 @@
 	}
 
 	/**
+	 * Convert the id of a store an item has, to the name of the store
 	 * @param {number} id
 	 * @returns {string}
 	 */
@@ -38,6 +40,7 @@
 	}
 
 	/**
+	 * Convert the id of a category an item has, to the color of that category
 	 * @param {number} id
 	 * @returns {string}
 	 */
@@ -63,10 +66,12 @@
 					<dt class="font-bold">{item.amount} x {item.name}</dt>
 					{#if item.store_id !== undefined}
 						{#if item.store_id !== 1}
-							<dd>{storeIdToName(item.store_id)}</dd>
+							<dd>
+								{storeIdToName(item.store_id)}
+								{#if item.note !== undefined} - {shortenString(item.note)}{/if}
+							</dd>
 						{/if}
 					{/if}
-					{#if item.note !== undefined}<dd>{shortenString(item.note)}</dd>{/if}
 				</a>
 			</span>
 			<form method="POST" action="?/switch">
@@ -78,7 +83,7 @@
 
 <style lang="postcss">
 	.list-item {
-		padding-top: 0rem;
-		padding-bottom: 0rem;
+		padding-top: 0;
+		padding-bottom: 0;
 	}
 </style>

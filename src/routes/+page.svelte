@@ -1,8 +1,20 @@
 <script>
 	import ItemListing from '$lib/ItemListing.svelte';
+	import ItemListingByStatus from '$lib/ItemListingByStatus.svelte';
+	import PageTitle from '$lib/PageTitle.svelte';
 
 	export let data;
+	const itemsOld = filterItems()[1];
+	const itemsNew = filterItems()[0];
+
+	function filterItems() {
+		let itemsNew = data.items.filter((item) => item.status === 'new');
+		let itemsOld = data.items.filter((item) => item.status === 'bought');
+		return [itemsNew, itemsOld];
+	}
 </script>
+
+<PageTitle title="Einkaufsliste" />
 
 <div class="flex justify-between">
 	<a href="/new-item">
@@ -15,27 +27,7 @@
 </div>
 <br />
 
-<h1 class="h3">Zu kaufen: {data.itemsNew.length} Artikel</h1>
-
-<ItemListing
-	items={data.itemsNew}
-	stores={data.stores}
-	buttonText="Gekauft"
-	categories={data.categories}
-/>
-
-<br />
-<hr class="!border-t-4" />
-<br />
-
-<h1 class="h3">Vergangene Einkäufe:</h1>
-
-<ItemListing
-	items={data.itemsOld}
-	stores={data.stores}
-	buttonText="Nochmal"
-	categories={data.categories}
-/>
+<ItemListingByStatus items={data.items} stores={data.stores} categories={data.categories} />
 
 <style lang="postcss">
 </style>

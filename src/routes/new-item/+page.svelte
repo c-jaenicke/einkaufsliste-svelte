@@ -1,10 +1,14 @@
 <script>
+	import PageTitle from '$lib/PageTitle.svelte';
+
 	export let data;
 </script>
 
 <h2 class="h2">Neuen Eintrag anlegen</h2>
 
 <br />
+
+<PageTitle title="Neuen Eintrag anlegen" />
 
 <form method="POST" action="?/new">
 	<label class="label">

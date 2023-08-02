@@ -1,25 +1,15 @@
 <script>
-	export let data;
+	import PageTitle from '$lib/PageTitle.svelte';
 
-	/**
-	 * @param {string} str - string to be shortened
-	 * @returns {string} shortened string
-	 */
-	function shortenString(str) {
-		const len = 20;
-		if (str.length <= len) {
-			return str;
-		} else {
-			return str.slice(0, len) + '...';
-		}
-	}
+	export let data;
 </script>
+
+<PageTitle title="Mehr" />
 
 <div class="flex justify-between">
 	<a href="more/new">
 		<button class="btn variant-filled-success">Neues Objekt</button>
 	</a>
-
 	<a href="/more" data-sveltekit-reload>
 		<button class="btn variant-filled-tertiary">Aktualisieren</button>
 	</a>
@@ -34,7 +24,7 @@
 		{#if item.id !== 1}
 			<div class="list-item">
 				<span class="flex-auto">
-					<a href="/more/new" {item}>
+					<a href="/more/store/{item.name}">
 						<dt class="font-bold">{item.name}</dt>
 					</a>
 				</span>
@@ -61,7 +51,7 @@
 					style="background-color: {item.color}"
 				/>
 				<span class="flex-auto">
-					<a href="/item/{item.id}">
+					<a href="/more/category/{item.name}">
 						<dt class="font-bold">{item.name}</dt>
 					</a>
 				</span>
@@ -75,7 +65,7 @@
 
 <style lang="postcss">
 	.list-item {
-		padding-top: 0rem;
-		padding-bottom: 0rem;
+		padding-top: 0;
+		padding-bottom: 0;
 	}
 </style>
