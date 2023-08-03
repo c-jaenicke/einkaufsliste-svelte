@@ -45,3 +45,4 @@ services:
 The environment variable `ORIGIN` can be set in the `.env` file when building the docker image or in the docker-compose file.
 
 The environment variable `API_BASE` **MUST BE SET in the `.env` file when building the docker image!!**
+Must follow this pattern `http://<container-name>:<port>`.
