@@ -1,7 +1,9 @@
 <script>
 	import PageTitle from '$lib/PageTitle.svelte';
+	import Switch from '$lib/Switch.svelte';
 
 	export let data;
+	let manage = false;
 </script>
 
 <PageTitle title="Mehr" />
@@ -29,7 +31,11 @@
 					</a>
 				</span>
 				<form method="POST" action="?/deleteStore">
-					<button class="btn variant-filled-error" name="id" value={item.id}>Löschen</button>
+					{#if manage}
+						<button class="btn variant-filled-error" name="id" value={item.id}>Löschen</button>
+					{:else}
+						<button class="btn variant-filled-error" disabled>Löschen</button>
+					{/if}
 				</form>
 			</div>
 		{/if}
@@ -56,12 +62,22 @@
 					</a>
 				</span>
 				<form method="POST" action="?/deleteCategory">
-					<button class="btn variant-filled-error" name="id" value={item.id}>Löschen</button>
+					{#if manage}
+						<button class="btn variant-filled-error" name="id" value={item.id}>Löschen</button>
+					{:else}
+						<button class="btn variant-filled-error" disabled>Löschen</button>
+					{/if}
 				</form>
 			</div>
 		{/if}
 	{/each}
 </dl>
+
+<br />
+<p>
+	<Switch bind:checked={manage} />
+	Objekte verwalten
+</p>
 
 <style lang="postcss">
 	.list-item {

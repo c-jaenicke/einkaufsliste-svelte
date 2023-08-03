@@ -53,9 +53,4 @@
 	p {
 		margin-right: 1.5rem;
 	}
-
-	img {
-		height: 1.2rem;
-		border: white 10px;
-	}
 </style>
