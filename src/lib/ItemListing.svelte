@@ -65,12 +65,12 @@
 				<a href="/item/{item.id}">
 					<dt class="font-bold">{item.amount} x {item.name}</dt>
 					{#if item.store_id !== undefined}
-						{#if item.store_id !== 1}
-							<dd>
+						<dd>
+							{#if item.store_id !== 1}
 								{storeIdToName(item.store_id)}
-								{#if item.note !== undefined} - {shortenString(item.note)}{/if}
-							</dd>
-						{/if}
+							{/if}
+							{#if item.note !== undefined} - {shortenString(item.note)}{/if}
+						</dd>
 					{/if}
 				</a>
 			</span>

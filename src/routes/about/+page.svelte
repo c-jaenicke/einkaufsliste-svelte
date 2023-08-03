@@ -43,7 +43,7 @@ sort by those categories and stores.
 	</a>
 
 	<a
-		href="https://github.com/c-jaenicke/einkaufsliste-svelte/issues/6"
+		href="https://github.com/c-jaenicke/einkaufsliste-svelte"
 		class="block card card-hover p-4"
 	>
 		<h3 class="h4">Frontend</h3>
