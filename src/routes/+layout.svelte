@@ -30,6 +30,7 @@
 				<p>©c-jaenicke</p>
 				<a href="/"> Einkaufsliste </a>
 				<a href="/more"> Mehr </a>
+				<a href="/about"> Über </a>
 			</svelte:fragment>
 			<svelte:fragment slot="trail">
 				<LightSwitch />
