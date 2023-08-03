@@ -1,6 +1,6 @@
 <script>
 	import PageTitle from '$lib/PageTitle.svelte';
-	import Switch from '$lib/Switch.svelte';
+	import { SlideToggle } from '@skeletonlabs/skeleton';
 
 	export let data;
 	let manage = false;
@@ -74,10 +74,10 @@
 </dl>
 
 <br />
-<p>
-	<Switch bind:checked={manage} />
-	Objekte verwalten
-</p>
+
+<SlideToggle name="manage" bind:checked={manage} active="bg-success-500"
+	>Objekte Verwalten</SlideToggle
+>
 
 <style lang="postcss">
 	.list-item {
