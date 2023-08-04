@@ -71,4 +71,8 @@ sort by those categories and stores.
 		@apply bg-gradient-to-br;
 		@apply from-primary-500 via-tertiary-500 to-success-500;
 	}
+
+	h4 {
+		word-wrap: break-word;
+	}
 </style>
