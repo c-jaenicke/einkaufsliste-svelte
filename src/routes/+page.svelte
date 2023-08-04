@@ -1,17 +1,8 @@
 <script>
-	import ItemListing from '$lib/ItemListing.svelte';
 	import ItemListingByStatus from '$lib/ItemListingByStatus.svelte';
 	import PageTitle from '$lib/PageTitle.svelte';
 
 	export let data;
-	const itemsOld = filterItems()[1];
-	const itemsNew = filterItems()[0];
-
-	function filterItems() {
-		let itemsNew = data.items.filter((item) => item.status === 'new');
-		let itemsOld = data.items.filter((item) => item.status === 'bought');
-		return [itemsNew, itemsOld];
-	}
 </script>
 
 <PageTitle title="Einkaufsliste" />
