@@ -23,22 +23,20 @@
 
 <dl class="list-dl">
 	{#each data.stores as item}
-		{#if item.id !== 1}
-			<div class="list-item">
-				<span class="flex-auto">
-					<a href="/more/store/{item.name}">
-						<dt class="font-bold">{item.name}</dt>
-					</a>
-				</span>
-				<form method="POST" action="?/deleteStore">
-					{#if manage}
-						<button class="btn variant-filled-error" name="id" value={item.id}>Löschen</button>
-					{:else}
-						<button class="btn variant-filled-error" disabled>Löschen</button>
-					{/if}
-				</form>
-			</div>
-		{/if}
+		<div class="list-item">
+			<span class="flex-auto">
+				<a href="/more/store/{item.name}">
+					<dt class="font-bold">{item.name}</dt>
+				</a>
+			</span>
+			<form method="POST" action="?/deleteStore">
+				{#if manage}
+					<button class="btn variant-filled-error" name="id" value={item.id}>Löschen</button>
+				{:else}
+					<button class="btn variant-filled-error" disabled>Löschen</button>
+				{/if}
+			</form>
+		</div>
 	{/each}
 </dl>
 
@@ -50,26 +48,24 @@
 
 <dl class="list-dl">
 	{#each data.cats as item}
-		{#if item.id !== 1}
-			<div class="list-item">
-				<span
-					class="badge-icon variant-filled border-2 border-black"
-					style="background-color: {item.color}"
-				/>
-				<span class="flex-auto">
-					<a href="/more/category/{item.name}">
-						<dt class="font-bold">{item.name}</dt>
-					</a>
-				</span>
-				<form method="POST" action="?/deleteCategory">
-					{#if manage}
-						<button class="btn variant-filled-error" name="id" value={item.id}>Löschen</button>
-					{:else}
-						<button class="btn variant-filled-error" disabled>Löschen</button>
-					{/if}
-				</form>
-			</div>
-		{/if}
+		<div class="list-item">
+			<span
+				class="badge-icon variant-filled border-2 border-black"
+				style="background-color: {item.color}"
+			/>
+			<span class="flex-auto">
+				<a href="/more/category/{item.name}">
+					<dt class="font-bold">{item.name}</dt>
+				</a>
+			</span>
+			<form method="POST" action="?/deleteCategory">
+				{#if manage}
+					<button class="btn variant-filled-error" name="id" value={item.id}>Löschen</button>
+				{:else}
+					<button class="btn variant-filled-error" disabled>Löschen</button>
+				{/if}
+			</form>
+		</div>
 	{/each}
 </dl>
 
