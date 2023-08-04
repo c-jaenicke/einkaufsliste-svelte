@@ -46,3 +46,26 @@ The environment variable `ORIGIN` can be set in the `.env` file when building th
 
 The environment variable `API_BASE` **MUST BE SET in the `.env` file when building the docker image!!**
 Must follow this pattern `http://<container-name>:<port>`.
+
+### .env
+
+`API_BASE` is required to build docker image currently.
+Has to be `http://localhost:8080` for local development,
+and `http://einkaufsliste-api:8080` when building the docker image.
+
+*Idk if this is correct, but has worked for me.*
+
+`ORIGIN` has be set to allow client-side POST requests.
+
+```env
+# hostname of backend container with port
+# local development mode
+API_BASE="http://localhost:8080"
+# prodction mode
+#API_BASE="http://einkaufsliste-api:8080"
+
+# NODE ADAPTER SETTINGS https://kit.svelte.dev/docs/adapter-node
+#HOST=
+#PORT=
+ORIGIN="http://localhost:3000"
+```
