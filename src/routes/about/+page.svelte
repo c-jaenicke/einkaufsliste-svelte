@@ -42,10 +42,7 @@ sort by those categories and stores.
 		<span class="badge variant-filled">Bootstrap</span>
 	</a>
 
-	<a
-		href="https://github.com/c-jaenicke/einkaufsliste-svelte"
-		class="block card card-hover p-4"
-	>
+	<a href="https://github.com/c-jaenicke/einkaufsliste-svelte" class="block card card-hover p-4">
 		<h3 class="h4">Frontend</h3>
 		<h4 class="h5">c-jaenicke/einkaufsliste-svelte</h4>
 		<p class="card-text">

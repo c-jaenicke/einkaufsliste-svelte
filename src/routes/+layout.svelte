@@ -26,11 +26,13 @@
 	<svelte:fragment slot="pageFooter">
 		<AppBar>
 			<svelte:fragment slot="lead">
-				<a href="https://github.com/c-jaenicke/einkaufsliste-svelte"> GitHub </a>
-				<p>©c-jaenicke</p>
-				<a href="/"> Einkaufsliste </a>
-				<a href="/more"> Mehr </a>
-				<a href="/about"> Über </a>
+				<div class="flex flex-wrap">
+					<a href="https://github.com/c-jaenicke/einkaufsliste-svelte"> GitHub </a>
+					<p>©c-jaenicke</p>
+					<a href="/"> Einkaufsliste </a>
+					<a href="/more"> Mehr </a>
+					<a href="/about"> Über </a>
+				</div>
 			</svelte:fragment>
 			<svelte:fragment slot="trail">
 				<LightSwitch />
