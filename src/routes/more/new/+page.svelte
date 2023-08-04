@@ -1,4 +1,6 @@
 <script>
+	import BackButton from '$lib/BackButton.svelte';
+
 	let objType = '';
 	let colorValue = '';
 </script>
@@ -36,9 +38,7 @@
 
 	<div class="flex justify-between">
 		<div />
-		<a href="/more">
-			<button class="btn variant-filled-warning">Abbrechen</button>
-		</a>
+		<BackButton />
 		<button class="btn variant-filled-success">Speichern</button>
 	</div>
 </form>

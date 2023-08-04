@@ -1,5 +1,6 @@
 <script>
 	import PageTitle from '$lib/PageTitle.svelte';
+	import BackButton from '$lib/BackButton.svelte';
 
 	export let data;
 </script>
@@ -48,9 +49,7 @@
 
 	<div class="flex justify-between">
 		<div />
-		<a href="/">
-			<button class="btn variant-filled-warning">Abbrechen</button>
-		</a>
+		<BackButton />
 		<button class="btn variant-filled-success">Speichern</button>
 	</div>
 </form>

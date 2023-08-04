@@ -1,4 +1,6 @@
 <script>
+	import BackButton from '$lib/BackButton.svelte';
+
 	export let data;
 
 	/**
@@ -114,9 +116,7 @@
 			value={data.item.id}
 			>Löschen
 		</button>
-		<a href="/">
-			<button class="btn variant-filled-warning">Abbrechen</button>
-		</a>
+		<BackButton />
 		<button class="btn variant-filled-success" value={data.item.id} name="id">Speichern</button>
 	</div>
 </form>
