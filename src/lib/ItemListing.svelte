@@ -26,6 +26,25 @@
 	}
 
 	/**
+	 *
+	 * @param {string} str
+	 * @param {string} storeName
+	 */
+	function shortenString2(str, storeName) {
+		let len = 13;
+
+		if (storeName !== 'keiner') {
+			len = len - (storeName.length + 3);
+		}
+
+		if (str.length <= len) {
+			return str;
+		} else {
+			return str.slice(0, len) + '...';
+		}
+	}
+
+	/**
 	 * Convert the id of a store an item has, to the name of the store
 	 * @param {number} id
 	 * @returns {string}
@@ -69,7 +88,8 @@
 							{#if item.store_id !== 1}
 								{storeIdToName(item.store_id)}
 							{/if}
-							{#if item.note !== undefined} - {shortenString(item.note)}{/if}
+							{#if item.note !== undefined}
+								- {shortenString2(item.note, storeIdToName(item.store_id))}{/if}
 						</dd>
 					{/if}
 				</a>

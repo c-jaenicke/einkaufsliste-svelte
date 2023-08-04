@@ -12,7 +12,7 @@
 				<a href="/">
 					<strong class="text-xl uppercase">Einkaufsliste</strong>
 				</a>
-				<a href="/more"> Mehr </a>
+				<a href="/more">Mehr</a>
 			</svelte:fragment>
 			<svelte:fragment slot="trail">
 				<LightSwitch />
@@ -29,9 +29,9 @@
 				<div class="flex flex-wrap">
 					<a href="https://github.com/c-jaenicke/einkaufsliste-svelte"> GitHub </a>
 					<p>©c-jaenicke</p>
-					<a href="/"> Einkaufsliste </a>
-					<a href="/more"> Mehr </a>
-					<a href="/about"> Über </a>
+					<a href="/">Einkaufsliste</a>
+					<a href="/more">Mehr</a>
+					<a href="/about">Über</a>
 				</div>
 			</svelte:fragment>
 			<svelte:fragment slot="trail">
@@ -46,14 +46,14 @@
 		margin: 0;
 		height: 100%;
 		width: 100vw;
-		padding: 0.5rem;
+		padding: 0.1rem;
 	}
 
 	a {
-		margin-right: 1.5rem;
+		margin-right: 1rem;
 	}
 
 	p {
-		margin-right: 1.5rem;
+		margin-right: 1rem;
 	}
 </style>
