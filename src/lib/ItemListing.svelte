@@ -16,33 +16,14 @@
 	 * @param {string} str - string to be shortened
 	 * @returns {string} shortened string
 	 */
-	function shortenString(str) {
+/*	function shortenString(str) {
 		const len = 20;
 		if (str.length <= len) {
 			return str;
 		} else {
 			return str.slice(0, len) + '...';
 		}
-	}
-
-	/**
-	 *
-	 * @param {string} str
-	 * @param {string} storeName
-	 */
-	function shortenString2(str, storeName) {
-		let len = 13;
-
-		if (storeName !== 'keiner') {
-			len = len - (storeName.length + 3);
-		}
-
-		if (str.length <= len) {
-			return str;
-		} else {
-			return str.slice(0, len) + '...';
-		}
-	}
+	}*/
 
 	/**
 	 * Convert the id of a store an item has, to the name of the store
@@ -80,7 +61,7 @@
 				class="badge-icon variant-filled border-2 border-black"
 				style="background-color: {categoryIdToColor(item.category_id)}"
 			/>
-			<span class="flex-auto" style="margin-left: 8px">
+			<span class="flex-auto" style="margin-left: 8px; overflow: hidden">
 				<a href="/item/{item.id}">
 					<dt class="font-bold">{item.amount} x {item.name}</dt>
 					{#if item.store_id !== undefined}
@@ -89,7 +70,7 @@
 								{storeIdToName(item.store_id)}
 							{/if}
 							{#if item.note !== undefined}
-								- {shortenString2(item.note, storeIdToName(item.store_id))}{/if}
+								- {item.note}{/if}
 						</dd>
 					{/if}
 				</a>

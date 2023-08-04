@@ -43,9 +43,7 @@
 
 <style lang="postcss">
 	.page {
-		margin: 0;
 		height: 100%;
-		width: 100vw;
 		padding: 0.1rem;
 	}
 
