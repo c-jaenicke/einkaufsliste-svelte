@@ -1,6 +1,7 @@
 <script>
 	import PageTitle from '$lib/PageTitle.svelte';
 	import { SlideToggle } from '@skeletonlabs/skeleton';
+	import { page } from '$app/stores';
 
 	export let data;
 	let manage = false;
@@ -12,7 +13,7 @@
 	<a href="more/new">
 		<button class="btn variant-filled-success">Neues Objekt</button>
 	</a>
-	<a href="/more" data-sveltekit-reload>
+	<a href={$page.url.pathname} data-sveltekit-reload>
 		<button class="btn variant-filled-tertiary">Aktualisieren</button>
 	</a>
 </div>

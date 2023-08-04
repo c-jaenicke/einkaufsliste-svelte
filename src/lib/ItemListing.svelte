@@ -16,7 +16,7 @@
 	 * @param {string} str - string to be shortened
 	 * @returns {string} shortened string
 	 */
-/*	function shortenString(str) {
+	/*	function shortenString(str) {
 		const len = 20;
 		if (str.length <= len) {
 			return str;

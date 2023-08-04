@@ -1,6 +1,7 @@
 <script>
 	import ItemListingByStatus from '$lib/ItemListingByStatus.svelte';
 	import PageTitle from '$lib/PageTitle.svelte';
+	import { page } from '$app/stores';
 
 	export let data;
 </script>
@@ -10,6 +11,9 @@
 <div class="flex justify-between">
 	<a href="/new-item">
 		<button class="btn variant-filled-success">Neuer Eintrag</button>
+	</a>
+	<a href={$page.url.pathname} data-sveltekit-reload>
+		<button class="btn variant-filled-tertiary">Aktualisieren</button>
 	</a>
 </div>
 <br />

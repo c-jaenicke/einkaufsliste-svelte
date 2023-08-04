@@ -13,17 +13,17 @@
 <form method="POST" action="?/new">
 	<label class="label">
 		<span>Name</span>
-		<input class="input" type="text" placeholder="Apfel" name="name" />
+		<input class="input" type="text" placeholder="Apfel" name="name" required maxlength="50" />
 	</label>
 
 	<label class="label">
 		<span>Notiz</span>
-		<input class="input" type="text" placeholder="Nur Bio" name="note" />
+		<input class="input" type="text" placeholder="Nur Bio" name="note" maxlength="100" />
 	</label>
 
 	<label class="label">
 		<span>Menge</span>
-		<input class="input" type="number" value="1" name="amount" max="100" min="0" />
+		<input class="input" type="number" value="1" name="amount" max="100" min="0" required />
 	</label>
 
 	<label class="label">
@@ -47,10 +47,10 @@
 	<br />
 
 	<div class="flex justify-between">
-		<button class="btn variant-filled-success">Speichern</button>
-
+		<div />
 		<a href="/">
 			<button class="btn variant-filled-warning">Abbrechen</button>
 		</a>
+		<button class="btn variant-filled-success">Speichern</button>
 	</div>
 </form>

@@ -37,21 +37,44 @@
 <form method="POST" action="?/new">
 	<label class="label">
 		<span>Name</span>
-		<input class="input" type="text" placeholder="Apfel" name="name" value={data.item.name} />
+		<input
+			class="input"
+			type="text"
+			placeholder="Apfel"
+			name="name"
+			value={data.item.name}
+			required
+			maxlength="50"
+		/>
 	</label>
 
 	<label class="label">
 		<span>Notiz</span>
 		{#if data.item.note === undefined}
-			<input class="input" type="text" placeholder="Nur Bio" name="note" value="" />
+			<input class="input" type="text" placeholder="Nur Bio" name="note" value="" maxlength="100" />
 		{:else}
-			<input class="input" type="text" placeholder="Nur Bio" name="note" value={data.item.note} />
+			<input
+				class="input"
+				type="text"
+				placeholder="Nur Bio"
+				name="note"
+				value={data.item.note}
+				maxlength="100"
+			/>
 		{/if}
 	</label>
 
 	<label class="label">
 		<span>Menge</span>
-		<input class="input" type="number" name="amount" max="100" min="0" value={data.item.amount} />
+		<input
+			class="input"
+			type="number"
+			name="amount"
+			max="100"
+			min="0"
+			value={data.item.amount}
+			required
+		/>
 	</label>
 
 	<label class="label">
@@ -83,12 +106,6 @@
 	<br />
 
 	<div class="flex justify-between">
-		<button class="btn variant-filled-success" value={data.item.id} name="id">Speichern</button>
-
-		<a href="/">
-			<button class="btn variant-filled-warning">Abbrechen</button>
-		</a>
-
 		<button
 			class="btn variant-filled-error"
 			formaction="?/delete"
@@ -97,5 +114,9 @@
 			value={data.item.id}
 			>Löschen
 		</button>
+		<a href="/">
+			<button class="btn variant-filled-warning">Abbrechen</button>
+		</a>
+		<button class="btn variant-filled-success" value={data.item.id} name="id">Speichern</button>
 	</div>
 </form>

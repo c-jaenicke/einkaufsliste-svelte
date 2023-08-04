@@ -53,7 +53,7 @@ Must follow this pattern `http://<container-name>:<port>`.
 Has to be `http://localhost:8080` for local development,
 and `http://einkaufsliste-api:8080` when building the docker image.
 
-*Idk if this is correct, but has worked for me.*
+_Idk if this is correct, but has worked for me._
 
 `ORIGIN` has be set to allow client-side POST requests.
 

@@ -35,10 +35,10 @@
 	<br />
 
 	<div class="flex justify-between">
-		<button class="btn variant-filled-success">Speichern</button>
-
+		<div />
 		<a href="/more">
 			<button class="btn variant-filled-warning">Abbrechen</button>
 		</a>
+		<button class="btn variant-filled-success">Speichern</button>
 	</div>
 </form>

@@ -27,11 +27,11 @@
 		<AppBar>
 			<svelte:fragment slot="lead">
 				<div class="flex flex-wrap">
-					<a href="https://github.com/c-jaenicke/einkaufsliste-svelte"> GitHub </a>
 					<p>©c-jaenicke</p>
+					<a href="https://github.com/c-jaenicke/einkaufsliste-svelte"> GitHub </a>
 					<a href="/">Einkaufsliste</a>
 					<a href="/more">Mehr</a>
-					<a href="/about">Über</a>
+					<a href="/about">About</a>
 				</div>
 			</svelte:fragment>
 			<svelte:fragment slot="trail">
