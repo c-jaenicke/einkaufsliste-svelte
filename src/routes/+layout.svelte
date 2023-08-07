@@ -9,10 +9,12 @@
 	<svelte:fragment slot="header">
 		<AppBar>
 			<svelte:fragment slot="lead">
-				<a href="/">
-					<strong class="text-xl uppercase">Einkaufsliste</strong>
-				</a>
-				<a href="/more">Mehr</a>
+				<div class="flex flex-wrap">
+					<a href="/">
+						<strong class="text-xl uppercase">Einkaufsliste</strong>
+					</a>
+					<a href="/more">Mehr</a>
+				</div>
 			</svelte:fragment>
 			<svelte:fragment slot="trail">
 				<LightSwitch />
