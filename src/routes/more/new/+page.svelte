@@ -36,9 +36,15 @@
 
 	<br />
 
-	<div class="flex justify-between">
+	<div class="flex justify-between flex-wrap-reverse">
 		<div />
 		<BackButton />
 		<button class="btn variant-filled-success">Speichern</button>
 	</div>
 </form>
+
+<style lang="postcss">
+	.flex {
+		gap: 10px;
+	}
+</style>

@@ -124,7 +124,7 @@
 
 	<br />
 
-	<div class="flex justify-between">
+	<div class="flex justify-between flex-wrap-reverse">
 		<button
 			class="btn variant-filled-error"
 			formaction="?/delete"
@@ -137,3 +137,9 @@
 		<button class="btn variant-filled-success" value={data.item.id} name="id">Speichern</button>
 	</div>
 </form>
+
+<style lang="postcss">
+	.flex {
+		gap: 10px;
+	}
+</style>

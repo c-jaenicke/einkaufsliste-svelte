@@ -56,4 +56,8 @@
 	p {
 		margin-right: 1rem;
 	}
+
+	.flex {
+		gap: 3px;
+	}
 </style>
