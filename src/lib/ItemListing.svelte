@@ -1,4 +1,7 @@
 <script>
+	import checkmark from '$lib/assets/check.svg';
+	import refresh from '$lib/assets/refresh-ccw.svg';
+
 	/** @type {{id: number, name: string, note: string, amount: number, status: string, store_id: number, category_id: number, edges: Object}[]}*/
 	export let items;
 
@@ -76,7 +79,15 @@
 				</a>
 			</span>
 			<form method="POST" action="?/switch">
-				<button class="btn variant-filled-primary" name="id" value={item.id}>{buttonText}</button>
+				<button class="btn variant-filled-primary" name="id" value={item.id}>
+					{#if buttonText === 'Gekauft'}
+						<img src={checkmark} alt={buttonText} />
+					{:else if buttonText === 'Nochmal'}
+						<img src={refresh} alt={buttonText} />
+					{:else}
+						{buttonText}
+					{/if}
+				</button>
 			</form>
 		</div>
 	{/each}
