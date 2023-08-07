@@ -3,6 +3,19 @@
 	import BackButton from '$lib/BackButton.svelte';
 
 	export let data;
+
+	/** @type {number} */
+	let amountItem = 1;
+
+	function incrementAmount() {
+		amountItem++;
+	}
+
+	function decreaseAmount() {
+		if (amountItem > 0) {
+			amountItem--;
+		}
+	}
 </script>
 
 <h2 class="h2">Neuen Eintrag anlegen</h2>
@@ -24,7 +37,19 @@
 
 	<label class="label">
 		<span>Menge</span>
-		<input class="input" type="number" value="1" name="amount" max="100" min="0" required />
+		<div class="flex justify-between">
+			<span class="btn variant-filled-error" on:click={decreaseAmount}>-</span>
+			<input
+				class="input"
+				type="number"
+				name="amount"
+				max="100"
+				min="0"
+				required
+				bind:value={amountItem}
+			/>
+			<span class="btn variant-filled-success" on:click={incrementAmount}>+</span>
+		</div>
 	</label>
 
 	<label class="label">
