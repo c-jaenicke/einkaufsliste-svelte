@@ -98,4 +98,10 @@
 		padding-top: 0;
 		padding-bottom: 0;
 	}
+
+	img {
+		min-width: 1rem;
+		max-width: 1.5rem;
+		flex-shrink: 0;
+	}
 </style>
