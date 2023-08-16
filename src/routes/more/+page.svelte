@@ -26,7 +26,7 @@
 	{#each data.stores as item}
 		<div class="list-item">
 			<span class="flex-auto">
-				<a href="/more/store/{item.name}">
+				<a href="/more/store/{encodeURIComponent(item.name)}">
 					<dt class="font-bold">{item.name}</dt>
 				</a>
 			</span>
@@ -55,7 +55,7 @@
 				style="background-color: {item.color}"
 			/>
 			<span class="flex-auto">
-				<a href="/more/category/{item.name}">
+				<a href="/more/category/{encodeURIComponent(item.name)}">
 					<dt class="font-bold">{item.name}</dt>
 				</a>
 			</span>
