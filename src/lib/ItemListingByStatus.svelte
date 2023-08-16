@@ -33,7 +33,7 @@
 			let itemList = [];
 			for (let i = 0; i < itemsOld.length; i++) {
 				if (itemsOld[i].status === 'bought') {
-					if (itemsOld[i].name.toLowerCase().includes(input)) {
+					if (itemsOld[i].name.toLowerCase().includes(input.toLowerCase())) {
 						itemList.push(itemsOld[i]);
 					}
 				}
@@ -55,7 +55,7 @@
 <ItemListing items={itemsNew} {stores} buttonText="Gekauft" {categories} />
 
 <br />
-<hr class="!border-t-4" />
+<hr class="!border-8">
 <br />
 
 <h1 class="h4">Vergangene Einkäufe:</h1>
