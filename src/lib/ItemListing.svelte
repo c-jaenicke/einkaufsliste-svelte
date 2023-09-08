@@ -59,7 +59,7 @@
 
 <dl class="list-dl">
 	{#each items as item}
-		<div class="list-item">
+		<div class="list-item" class:bought={buttonText === 'Nochmal'}>
 			<span
 				class="badge-icon variant-filled border-2 border-black"
 				style="background-color: {categoryIdToColor(item.category_id)}"
@@ -97,6 +97,10 @@
 	.list-item {
 		padding-top: 0;
 		padding-bottom: 0;
+	}
+
+	.bought {
+		opacity: 60%;
 	}
 
 	img {

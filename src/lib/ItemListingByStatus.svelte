@@ -55,7 +55,7 @@
 <ItemListing items={itemsNew} {stores} buttonText="Gekauft" {categories} />
 
 <br />
-<hr class="!border-8">
+<hr class="!border-8" />
 <br />
 
 <h1 class="h4">Vergangene Einkäufe:</h1>
