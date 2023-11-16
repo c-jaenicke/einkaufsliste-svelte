@@ -6,7 +6,7 @@ This is the main item list, it shows all items that need to be bought or were bo
 You can mark something as bought by hitting the checkmark button
 and move something to the top by hitting the button with the refresh symbol.
 
-| <img src="https://raw.githubusercontent.com/c-jaenicke/einkaufsliste-svelte/main/images/item-list.png" width="350"> | 
+| <img src="https://raw.githubusercontent.com/c-jaenicke/einkaufsliste-svelte/main/images/item-list.png" width="350"> |
 <img src="https://raw.githubusercontent.com/c-jaenicke/einkaufsliste-svelte/main/images/item-list-darkmode.png" width="350"> |
 
 ## New Item Creation Form
@@ -25,7 +25,7 @@ A store only has a name, a category has a name and a color.
 
 ## Items Listed Under Specific Shop
 
-By clicking on a category or a store on the more page, 
+By clicking on a category or a store on the more page,
 you can see which specific items are listed under that store or category.
 
 <img src="https://github.com/c-jaenicke/einkaufsliste-svelte/blob/main/images/per-shop-list.png?raw=true" width="350">

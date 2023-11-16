@@ -11,6 +11,9 @@
 					<a href="/">
 						<strong class="text-xl uppercase">Einkaufsliste</strong>
 					</a>
+					<span> | </span>
+					<a href="/pet">Katze</a>
+					<span> | </span>
 					<a href="/more">Mehr</a>
 				</div>
 			</svelte:fragment>
@@ -30,6 +33,7 @@
 					<p>©c-jaenicke</p>
 					<a href="https://github.com/c-jaenicke/einkaufsliste-svelte"> GitHub </a>
 					<a href="/">Einkaufsliste</a>
+					<a href="/pet">Katze</a>
 					<a href="/more">Mehr</a>
 					<a href="/about">About</a>
 				</div>
