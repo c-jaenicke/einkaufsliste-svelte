@@ -60,6 +60,10 @@
 
 <h1 class="h4">Vergangene Einkäufe:</h1>
 
+{#if searchTerm.length > 0}
+	<ItemListing items={search(searchTerm)} {stores} buttonText="Nochmal" {categories} />
+{/if}
+
 <div class="flex">
 	<button class="btn variant-filled-error" on:click={clearSearchTerm}>
 		<img src={cross} alt="X" />
@@ -67,7 +71,9 @@
 	<input class="input" type="text" placeholder="Suchen..." bind:value={searchTerm} />
 </div>
 
-<ItemListing items={search(searchTerm)} {stores} buttonText="Nochmal" {categories} />
+{#if searchTerm.length === 0}
+	<ItemListing items={search(searchTerm)} {stores} buttonText="Nochmal" {categories} />
+{/if}
 
 <style lang="postcss">
 	img {
