@@ -38,7 +38,7 @@
 	<label class="label">
 		<span>Menge</span>
 		<div class="flex justify-between">
-			<span class="btn variant-filled-error" on:click={decreaseAmount}>-</span>
+			<button type="button" class="btn variant-filled-error" on:click={decreaseAmount}>-</button>
 			<input
 				class="input"
 				type="number"
@@ -48,7 +48,7 @@
 				required
 				bind:value={amountItem}
 			/>
-			<span class="btn variant-filled-success" on:click={incrementAmount}>+</span>
+			<button type="button" class="btn variant-filled-success" on:click={incrementAmount}>+</button>
 		</div>
 	</label>
 

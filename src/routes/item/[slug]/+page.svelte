@@ -82,7 +82,7 @@
 	<label class="label">
 		<span>Menge</span>
 		<div class="flex justify-between">
-			<span class="btn variant-filled-error" on:click={decreaseAmount}>-</span>
+			<button type="button" class="btn variant-filled-error" on:click={decreaseAmount}>-</button>
 			<input
 				class="input"
 				type="number"
@@ -92,7 +92,7 @@
 				required
 				bind:value={amountItem}
 			/>
-			<span class="btn variant-filled-success" on:click={incrementAmount}>+</span>
+			<button type="button" class="btn variant-filled-success" on:click={incrementAmount}>+</button>
 		</div>
 	</label>
 
@@ -126,6 +126,7 @@
 
 	<div class="flex justify-between flex-wrap-reverse">
 		<button
+			type="button"
 			class="btn variant-filled-error"
 			formaction="?/delete"
 			formmethod="POST"
@@ -134,7 +135,9 @@
 			>Löschen
 		</button>
 		<BackButton />
-		<button class="btn variant-filled-success" value={data.item.id} name="id">Speichern</button>
+		<button type="submit" class="btn variant-filled-success" value={data.item.id} name="id"
+			>Speichern</button
+		>
 	</div>
 </form>
 
