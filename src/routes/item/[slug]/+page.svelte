@@ -126,7 +126,7 @@
 
 	<div class="flex justify-between flex-wrap-reverse">
 		<button
-			type="button"
+			type="submit"
 			class="btn variant-filled-error"
 			formaction="?/delete"
 			formmethod="POST"
