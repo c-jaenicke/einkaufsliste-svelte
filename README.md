@@ -1,76 +1,42 @@
-# einkaufsliste-svelte
+# sv
 
-Frontend for [c-jaenicke/einkaufsliste-go-gin](https://github.com/c-jaenicke/einkaufsliste-go-gin).
-Made using [SvelteKit (kit.svelte.dev)](https://kit.svelte.dev/)
-and [Skeleton (skeleton.dev)](https://www.skeleton.dev/).
+Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
 
-## Screenshots
+## Creating a project
 
-th
-[SCREENSHOTS.md](SCREENSHOTS.md)
+If you're seeing this, you've probably already done this step. Congrats!
 
-## npm run
-
-```shell
-npm run
-Scripts available in einkaufsliste-svelte-skeleton@0.0.1 via `npm run-script`:
-  dev
-    vite dev
-  build
-    vite build
-  preview
-    vite preview
-  check
-    svelte-kit sync && svelte-check --tsconfig ./tsconfig.json
-  check:watch
-    svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch
-  lint
-    prettier --plugin-search-dir . --check . && eslint .
-  format
-    prettier --plugin-search-dir . --write .
+```sh
+# create a new project
+npx sv create my-app
 ```
 
-## Deployment
+To recreate this project with the same configuration:
 
-Example deploying frontend in docker compose file:
-
-```yaml
-services:
-  frontend:
-    container_name: einkaufsliste-frontend
-    hostname: einkaufsliste-frontend
-    image: einkaufsliste-svelte:latest
-    restart: unless-stopped
-    environment:
-      - 'ORIGIN=http://localhost:3000'
-    ports:
-      - 3000:3000
+```sh
+# recreate this project
+pnpm dlx sv@0.16.5 create --template demo --types ts --add prettier eslint vitest="usages:unit,component" tailwindcss="plugins:typography,forms" sveltekit-adapter="adapter:auto" --install pnpm einkaufsliste
 ```
 
-The environment variable `ORIGIN` can be set in the `.env` file when building the docker image or in the docker-compose file.
+## Developing
 
-The environment variable `API_BASE` **MUST BE SET in the `.env` file when building the docker image!!**
-Must follow this pattern `http://<container-name>:<port>`.
+Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
 
-### .env
+```sh
+npm run dev
 
-`API_BASE` is required to build docker image currently.
-Has to be `http://localhost:8080` for local development,
-and `http://einkaufsliste-api:8080` when building the docker image.
-
-_Idk if this is correct, but has worked for me._
-
-`ORIGIN` has be set to allow client-side POST requests.
-
-```env
-# hostname of backend container with port
-# local development mode
-API_BASE="http://localhost:8080"
-# prodction mode
-#API_BASE="http://einkaufsliste-api:8080"
-
-# NODE ADAPTER SETTINGS https://kit.svelte.dev/docs/adapter-node
-#HOST=
-#PORT=
-ORIGIN="http://localhost:3000"
+# or start the server and open the app in a new browser tab
+npm run dev -- --open
 ```
+
+## Building
+
+To create a production version of your app:
+
+```sh
+npm run build
+```
+
+You can preview the production build with `npm run preview`.
+
+> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
