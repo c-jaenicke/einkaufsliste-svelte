@@ -19,11 +19,11 @@
 	let items = $state<any[]>(data.items);
 	let stores = $state<any[]>(data.stores);
 	let categories = $state<any[]>(data.categories);
-	let frequent = $state<any[]>(data.frequent);
 
 	let searchTerm = $state('');
 	let isOnline = $state(true);
 	let offlineQueue = $state<SyncAction[]>([]);
+	let previewImage = $state<string | null>(null);
 
 	// Swipe gestures states
 	let swipedItemId = $state<number | null>(null);
@@ -35,31 +35,57 @@
 	const activeItems = $derived(items.filter((i: any) => i.status === 'new'));
 	const boughtItems = $derived(items.filter((i: any) => i.status === 'bought'));
 
-	// Grouping active items by category for department-by-department navigation
-	const activeGroups = $derived(getActiveGroups(items, categories));
+	// Grouping active items by store first, then by category within each store,
+	// so the list can be worked through store-by-store, department-by-department.
+	const activeGroups = $derived(getActiveGroups(items, stores, categories));
 
-	function getActiveGroups(itemsList: any[], catsList: any[]) {
+	function sortByNameNoneLast(a: { id: number; name: string }, b: { id: number; name: string }) {
+		if (a.id === 1) return 1;
+		if (b.id === 1) return -1;
+		return a.name.localeCompare(b.name);
+	}
+
+	function getActiveGroups(itemsList: any[], storesList: any[], catsList: any[]) {
 		const active = itemsList.filter((i: any) => i.status === 'new');
-		const groups: { [key: number]: any[] } = {};
+
+		const storeMap: { [key: number]: any[] } = {};
 		active.forEach((item) => {
-			const cid = item.category_id || 1;
-			if (!groups[cid]) groups[cid] = [];
-			groups[cid].push(item);
+			const sid = item.store_id || 1;
+			if (!storeMap[sid]) storeMap[sid] = [];
+			storeMap[sid].push(item);
 		});
-		return Object.keys(groups)
-			.map((cidStr) => {
-				const cid = parseInt(cidStr);
-				const cat = catsList.find((c) => c.id === cid);
+
+		return Object.keys(storeMap)
+			.map((sidStr) => {
+				const sid = parseInt(sidStr);
+				const store = storesList.find((s) => s.id === sid);
+				const storeItems = storeMap[sid];
+
+				const catMap: { [key: number]: any[] } = {};
+				storeItems.forEach((item) => {
+					const cid = item.category_id || 1;
+					if (!catMap[cid]) catMap[cid] = [];
+					catMap[cid].push(item);
+				});
+
+				const categoryGroups = Object.keys(catMap)
+					.map((cidStr) => {
+						const cid = parseInt(cidStr);
+						const cat = catsList.find((c) => c.id === cid);
+						return {
+							category: cat || { id: 1, name: 'Keine Kategorie', color: '#64748b' },
+							items: catMap[cid]
+						};
+					})
+					.sort((a, b) => sortByNameNoneLast(a.category, b.category));
+
 				return {
-					category: cat || { id: 1, name: 'Keine Kategorie', color: '#64748b' },
-					items: groups[cid]
+					store: store || { id: 1, name: 'Kein Laden' },
+					categoryGroups,
+					itemCount: storeItems.length
 				};
 			})
-			.sort((a, b) => {
-				if (a.category.id === 1) return 1;
-				if (b.category.id === 1) return -1;
-				return a.category.name.localeCompare(b.category.name);
-			});
+			.sort((a, b) => sortByNameNoneLast(a.store, b.store));
 	}
 
 	// Filtering bought items
@@ -71,11 +97,7 @@
 
 	// Detect if an item is pending offline synchronization
 	function isPendingSync(item: any): boolean {
-		return offlineQueue.some(
-			(q) =>
-				(q.type === 'switch' && q.id === item.id) ||
-				(q.type === 'quickadd' && q.payload && q.payload.name === item.name && item.id < 0)
-		);
+		return offlineQueue.some((q) => q.type === 'switch' && q.id === item.id);
 	}
 
 	// Update offline queue tracking
@@ -91,11 +113,10 @@
 		if (!isOnline) return;
 
 		try {
-			const [resItems, resStores, resCats, resFreq] = await Promise.all([
+			const [resItems, resStores, resCats] = await Promise.all([
 				fetch(`${PUBLIC_API_BASE}/items`),
 				fetch(`${PUBLIC_API_BASE}/stores`),
-				fetch(`${PUBLIC_API_BASE}/categories`),
-				fetch(`${PUBLIC_API_BASE}/items/frequent`)
+				fetch(`${PUBLIC_API_BASE}/categories`)
 			]);
 
 			if (resItems.ok) {
@@ -113,11 +134,6 @@
 				categories = freshCats;
 				setCachedData('categories', freshCats);
 			}
-			if (resFreq.ok) {
-				const freshFreq = await resFreq.json();
-				frequent = freshFreq;
-				setCachedData('frequent', freshFreq);
-			}
 		} catch (e) {
 			console.warn('Revalidation failed (possibly offline). Using cache.', e);
 		}
@@ -128,12 +144,10 @@
 		const cachedItems = getCachedData('items');
 		const cachedStores = getCachedData('stores');
 		const cachedCats = getCachedData('categories');
-		const cachedFreq = getCachedData('frequent');
 
 		if (cachedItems) items = cachedItems;
 		if (cachedStores) stores = cachedStores;
 		if (cachedCats) categories = cachedCats;
-		if (cachedFreq) frequent = cachedFreq;
 
 		isOnline = navigator.onLine;
 		window.addEventListener('online', () => {
@@ -172,49 +186,31 @@
 		});
 	}
 
-	async function handleArchive() {
-		items = items.filter((i: any) => i.status !== 'bought');
-		setCachedData('items', items);
-
-		pushToQueue({ type: 'archive' });
-		updateQueueTracking();
-		processOfflineQueue(() => {
-			refreshData();
-		});
-	}
-
-	async function handleQuickAdd(name: string, storeId?: number, categoryId?: number) {
-		const tempId = -Math.floor(Math.random() * 100000);
-		const newItem = {
-			id: tempId,
-			name,
-			amount: 1,
-			status: 'new',
-			store_id: storeId || 1,
-			category_id: categoryId || 1,
-			note: ''
-		};
-
-		items = [newItem, ...items];
-		setCachedData('items', items);
-
-		const payload = { name, amount: 1, store_id: storeId, category_id: categoryId };
-		pushToQueue({ type: 'quickadd', payload });
-		updateQueueTracking();
-		processOfflineQueue(() => {
-			refreshData();
-		});
-	}
-
 	// Helper getters
-	function getStoreName(id: number) {
-		const st = stores.find((s: any) => s.id === id);
-		return st ? st.name : 'keiner';
-	}
-
 	function getCategoryColor(id: number) {
 		const cat = categories.find((c: any) => c.id === id);
 		return cat ? cat.color : '#64748b';
+	}
+
+	function getStoreName(id: number) {
+		const store = stores.find((s: any) => s.id === id);
+		return store ? store.name : 'Kein Laden';
+	}
+
+	function openImagePreview(e: MouseEvent, imagePath: string) {
+		e.stopPropagation();
+		previewImage = `${PUBLIC_API_BASE}${imagePath}`;
+	}
+
+	// Pinch-zooming the preview image leaves mobile browsers zoomed in even
+	// after it's closed, so force a reset by briefly capping the viewport scale.
+	function closeImagePreview() {
+		previewImage = null;
+		const viewport = document.querySelector('meta[name="viewport"]');
+		if (!viewport) return;
+		const original = viewport.getAttribute('content') || '';
+		viewport.setAttribute('content', `${original}, maximum-scale=1.0`);
+		setTimeout(() => viewport.setAttribute('content', original), 300);
 	}
 
 	//
@@ -280,7 +276,7 @@
 	<!-- Connection Offline Alert banner -->
 	{#if !isOnline}
 		<div
-			class="bg-amber-500/10 border border-amber-500/35 text-amber-600 dark:text-amber-400 px-4 py-3 rounded-xl text-xs font-semibold flex items-center gap-2 animate-pulse"
+			class="bg-amber-500/10 border border-amber-500/35 text-amber-600 dark:text-amber-400 px-4 py-3 rounded-xl font-semibold flex items-center gap-2 animate-pulse"
 		>
 			<svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 				<path
@@ -297,38 +293,13 @@
 	<!-- Top Stats & Actions -->
 	<div class="flex items-center justify-between gap-3">
 		<div>
-			<h2 class="text-2xl font-black tracking-tight text-slate-800 dark:text-slate-100">
-				Einkaufsliste
-			</h2>
-			<p class="text-xs text-slate-500 dark:text-slate-450 font-semibold">
+			<p class="font-semibold">
 				{activeItems.length} Artikel zu besorgen
 			</p>
 		</div>
 		<div class="flex items-center gap-2">
-			<!-- Bulk Clean checked items -->
-			{#if boughtItems.length > 0}
-				<button
-					type="button"
-					onclick={handleArchive}
-					class="p-2.5 bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 rounded-xl border border-rose-500/25 transition-all flex items-center justify-center cursor-pointer"
-					title="Alle gekauften Einträge archivieren"
-				>
-					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-						/>
-					</svg>
-				</button>
-			{/if}
-
 			<!-- New Entry Link -->
-			<a
-				href="/new-item"
-				class="px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-sm rounded-xl shadow-md hover:shadow-lg transition-all flex items-center gap-1.5"
-			>
+			<a href="/new-item" class="btn preset-filled-success-500 rounded-xl transition-all">
 				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path
 						stroke-linecap="round"
@@ -342,211 +313,184 @@
 		</div>
 	</div>
 
-	<!-- Recommendation Panel (Horizontal scrollable quick add) -->
-	{#if frequent && frequent.length > 0}
-		<div class="space-y-2">
-			<h3 class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-				Schnell hinzufügen
-			</h3>
-			<div class="flex gap-2 overflow-x-auto pb-2 scrollbar-none snap-x -mx-4 px-4">
-				{#each frequent as freq (freq.name)}
-					<button
-						type="button"
-						onclick={() => handleQuickAdd(freq.name, freq.store_id, freq.category_id)}
-						class="snap-start shrink-0 px-3.5 py-1.5 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-850 border border-slate-200 dark:border-slate-850 rounded-full text-xs font-semibold text-slate-700 dark:text-slate-300 transition-all hover:border-emerald-500/35 active:scale-95 flex items-center gap-1 cursor-pointer"
-					>
-						<span class="text-emerald-500 font-bold">+</span>
-						{freq.name}
-					</button>
-				{/each}
-			</div>
-		</div>
-	{/if}
-
 	<!-- Active Shopping List -->
 	<div class="space-y-4">
 		{#if activeGroups.length === 0}
-			<div
-				class="text-center py-10 bg-white/40 dark:bg-slate-900/40 rounded-2xl border border-dashed border-slate-300 dark:border-slate-800"
-			>
-				<p class="text-slate-400 dark:text-slate-500 text-sm font-medium">
-					Dein Einkaufszettel ist leer.
-				</p>
-				<a
-					href="/new-item"
-					class="text-emerald-600 dark:text-emerald-400 text-xs font-bold mt-1 inline-block hover:underline"
-				>
-					Jetzt ersten Eintrag erstellen
-				</a>
+			<div class="list-card text-center">
+				<p class="font-medium">Dein Einkaufszettel ist leer.</p>
 			</div>
 		{:else}
-			<div class="space-y-6">
-				{#each activeGroups as group (group.category.id)}
-					<div class="space-y-2">
-						<!-- Category grouping header -->
+			<div class="space-y-8">
+				{#each activeGroups as storeGroup (storeGroup.store.id)}
+					<div class="space-y-4">
+						<!-- Store grouping header -->
 						<div class="flex items-center gap-2 px-1">
+							<h3 class="font-black tracking-wide">
+								{storeGroup.store.name}
+							</h3>
 							<span
-								class="w-2.5 h-2.5 rounded-full shrink-0 border border-black/10 shadow-inner"
-								style="background-color: {group.category.color}"
-							></span>
-							<h4
-								class="text-xs font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider"
+								class="font-bold   bg-surface-200-800 px-1.5 py-0.5 rounded-md"
 							>
-								{group.category.name}
-							</h4>
-							<span
-								class="text-[10px] font-bold text-slate-400 dark:text-slate-550 bg-slate-200/50 dark:bg-slate-900 px-1.5 py-0.5 rounded-md"
-							>
-								{group.items.length}
+								{storeGroup.itemCount}
 							</span>
 						</div>
 
-						<div class="space-y-2">
-							{#each group.items as item (item.id)}
-								<!-- Swipe Container wrapper -->
-								<div
-									class="relative overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800/80 shadow-sm bg-slate-100 dark:bg-slate-950"
-								>
-									<!-- BACKGROUND PANELS (Swipe helpers) -->
-									<!-- Yellow edit panel (Revealed when swiping right) -->
-									<div
-										class="absolute inset-0 bg-amber-500 dark:bg-amber-600 flex items-center justify-start pl-6 text-white transition-opacity duration-150 {activeSwipeType ===
-											'right' && swipedItemId === item.id
-											? 'opacity-100'
-											: 'opacity-0'}"
-									>
-										<svg
-											class="w-5 h-5 animate-pulse"
-											fill="none"
-											stroke="currentColor"
-											viewBox="0 0 24 24"
+						{#each storeGroup.categoryGroups as group (group.category.id)}
+							<div class="space-y-2">
+								<div class="space-y-2">
+									{#each group.items as item (item.id)}
+										<!-- Swipe Container wrapper -->
+										<div
+											class="relative overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800/80 bg-surface-100-900"
 										>
-											<path
-												stroke-linecap="round"
-												stroke-linejoin="round"
-												stroke-width="2.5"
-												d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-											/>
-										</svg>
-										<span class="text-xs font-bold ml-2">Bearbeiten</span>
-									</div>
-
-									<!-- Green checkmark panel (Revealed when swiping left) -->
-									<div
-										class="absolute inset-0 bg-emerald-500 dark:bg-emerald-600 flex items-center justify-end pr-6 text-white transition-opacity duration-150 {activeSwipeType ===
-											'left' && swipedItemId === item.id
-											? 'opacity-100'
-											: 'opacity-0'}"
-									>
-										<span class="text-xs font-bold mr-2">Einkauf abhaken</span>
-										<svg
-											class="w-5 h-5 animate-pulse"
-											fill="none"
-											stroke="currentColor"
-											viewBox="0 0 24 24"
-										>
-											<path
-												stroke-linecap="round"
-												stroke-linejoin="round"
-												stroke-width="2.5"
-												d="M5 13l4 4L19 7"
-											/>
-										</svg>
-									</div>
-
-									<!-- SLIDING CARD CONTAINER -->
-									<div
-										onpointerdown={(e) => handlePointerDown(e, item)}
-										onpointermove={handlePointerMove}
-										onpointerup={(e) => handlePointerUp(e, item)}
-										class="relative bg-white dark:bg-slate-900 p-3.5 flex items-center justify-between gap-3 select-none touch-pan-y active:cursor-grabbing cursor-grab"
-										style="transform: translateX({swipedItemId === item.id
-											? swipeOffset
-											: 0}px); transition: {swipedItemId === item.id
-											? 'none'
-											: 'transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1)'}"
-									>
-										<div class="flex items-center gap-3 overflow-hidden flex-1">
-											<!-- Category Badge indicator -->
-											<span
-												class="w-3.5 h-3.5 rounded-full shrink-0 border border-black/10 shadow-inner"
-												style="background-color: {getCategoryColor(item.category_id)}"
-											></span>
-
-											<!-- Image Thumbnail preview -->
-											{#if item.image_path}
-												<img
-													src="{PUBLIC_API_BASE}{item.image_path}"
-													alt={item.name}
-													class="w-9 h-9 object-cover rounded-lg border border-slate-200 dark:border-slate-800 shrink-0 pointer-events-none"
-												/>
-											{/if}
-
-											<div class="overflow-hidden flex-1">
-												<div class="flex items-center gap-1.5">
-													<p class="font-bold text-slate-800 dark:text-slate-100 truncate">
-														{item.amount}x {item.name}
-													</p>
-
-													<!-- Pending Sync Badge indicator -->
-													{#if isPendingSync(item)}
-														<span
-															class="inline-flex items-center text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider gap-0.5 shrink-0"
-															title="Warte auf Synchronisation"
-														>
-															<svg
-																class="w-3 h-3 text-slate-400 dark:text-slate-500 animate-spin"
-																fill="none"
-																stroke="currentColor"
-																viewBox="0 0 24 24"
-															>
-																<path
-																	stroke-linecap="round"
-																	stroke-linejoin="round"
-																	stroke-width="2.5"
-																	d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H18"
-																/>
-															</svg>
-														</span>
-													{/if}
-												</div>
-												<p
-													class="text-xs text-slate-500 dark:text-slate-450 truncate mt-0.5 pointer-events-none"
+											<!-- BACKGROUND PANELS (Swipe helpers) -->
+											<!-- Yellow edit panel (Revealed when swiping right) -->
+											<div
+												class="absolute inset-0 bg-amber-500 dark:bg-amber-600 flex items-center justify-start pl-6 text-white transition-opacity duration-150 {activeSwipeType ===
+													'right' && swipedItemId === item.id
+													? 'opacity-100'
+													: 'opacity-0'}"
+											>
+												<svg
+													class="w-5 h-5 animate-pulse"
+													fill="none"
+													stroke="currentColor"
+													viewBox="0 0 24 24"
 												>
-													{#if item.store_id && item.store_id !== 1}
-														<span class="text-emerald-600 dark:text-emerald-400 font-semibold"
-															>{getStoreName(item.store_id)}</span
+													<path
+														stroke-linecap="round"
+														stroke-linejoin="round"
+														stroke-width="2.5"
+														d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+													/>
+												</svg>
+												<span class="font-bold ml-2">Bearbeiten</span>
+											</div>
+
+											<!-- Green checkmark panel (Revealed when swiping left) -->
+											<div
+												class="absolute inset-0 bg-emerald-500 dark:bg-emerald-600 flex items-center justify-end pr-6 text-white transition-opacity duration-150 {activeSwipeType ===
+													'left' && swipedItemId === item.id
+													? 'opacity-100'
+													: 'opacity-0'}"
+											>
+												<span class="font-bold mr-2">Einkauf abhaken</span>
+												<svg
+													class="w-5 h-5 animate-pulse"
+													fill="none"
+													stroke="currentColor"
+													viewBox="0 0 24 24"
+												>
+													<path
+														stroke-linecap="round"
+														stroke-linejoin="round"
+														stroke-width="2.5"
+														d="M5 13l4 4L19 7"
+													/>
+												</svg>
+											</div>
+
+											<!-- SLIDING CARD CONTAINER -->
+											<div
+												onpointerdown={(e) => handlePointerDown(e, item)}
+												onpointermove={handlePointerMove}
+												onpointerup={(e) => handlePointerUp(e, item)}
+												class="relative bg-surface-200-800 p-2.5 flex items-center justify-between gap-3 select-none touch-pan-y active:cursor-grabbing cursor-grab"
+												style="transform: translateX({swipedItemId === item.id
+													? swipeOffset
+													: 0}px); transition: {swipedItemId === item.id
+													? 'none'
+													: 'transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1)'}"
+											>
+												<div class="flex items-center gap-3 overflow-hidden flex-1">
+													<!-- Category Badge indicator -->
+													<span
+														class="w-3.5 h-3.5 rounded-full shrink-0 border border-black/10"
+														style="background-color: {getCategoryColor(item.category_id)}"
+													></span>
+
+													<!-- Image Thumbnail preview -->
+													{#if item.image_path}
+														<button
+															type="button"
+															onclick={(e) => openImagePreview(e, item.image_path)}
+															onpointerdown={(e) => e.stopPropagation()}
+															class="shrink-0 cursor-pointer"
+															title="Bild vergrößern"
 														>
+															<img
+																src="{PUBLIC_API_BASE}{item.image_path}"
+																alt={item.name}
+																class="w-9 h-9 object-cover rounded-lg border border-slate-200 dark:border-slate-800 pointer-events-none"
+															/>
+														</button>
 													{/if}
-													{#if item.note}
-														{#if item.store_id && item.store_id !== 1}
-															<span class="mx-1 text-slate-300 dark:text-slate-700">•</span>
+
+													<div class="overflow-hidden flex-1">
+														<div class="flex items-center gap-1.5">
+															<p class="font-bold truncate">
+																{item.amount}x {item.name}
+															</p>
+
+															<!-- Pending Sync Badge indicator -->
+															{#if isPendingSync(item)}
+																<span
+																	class="inline-flex items-center  dark:text-slate-500 font-bold tracking-wider gap-0.5 shrink-0"
+																	title="Warte auf Synchronisation"
+																>
+																	<svg
+																		class="w-3 h-3  dark:text-slate-500 animate-spin"
+																		fill="none"
+																		stroke="currentColor"
+																		viewBox="0 0 24 24"
+																	>
+																		<path
+																			stroke-linecap="round"
+																			stroke-linejoin="round"
+																			stroke-width="2.5"
+																			d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H18"
+																		/>
+																	</svg>
+																</span>
+															{/if}
+														</div>
+														{#if item.note}
+															<p
+																class="truncate mt-0.5 pointer-events-none italic"
+															>
+																{item.note}
+															</p>
 														{/if}
-														<span class="italic">"{item.note}"</span>
-													{/if}
-												</p>
+													</div>
+												</div>
+
+												<!-- Standard Checkmark complete button (backup fallback) -->
+												<button
+													type="button"
+													onclick={() => handleSwitchStatus(item.id)}
+													class="btn-icon preset-filled-success-500 rounded-lg transition-all active:scale-90 cursor-pointer shrink-0"
+													title="Als gekauft markieren"
+												>
+													<svg
+														class="w-5 h-5"
+														fill="none"
+														stroke="currentColor"
+														viewBox="0 0 24 24"
+													>
+														<path
+															stroke-linecap="round"
+															stroke-linejoin="round"
+															stroke-width="2.5"
+															d="M5 13l4 4L19 7"
+														/>
+													</svg>
+												</button>
 											</div>
 										</div>
-
-										<!-- Standard Checkmark complete button (backup fallback) -->
-										<button
-											type="button"
-											onclick={() => handleSwitchStatus(item.id)}
-											class="w-9 h-9 bg-slate-100 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-850 hover:bg-emerald-500/20 hover:text-emerald-600 dark:hover:text-emerald-400 hover:border-emerald-500/35 text-slate-400 rounded-lg flex items-center justify-center transition-all active:scale-90 cursor-pointer shrink-0"
-										>
-											<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path
-													stroke-linecap="round"
-													stroke-linejoin="round"
-													stroke-width="2.5"
-													d="M5 13l4 4L19 7"
-												/>
-											</svg>
-										</button>
-									</div>
+									{/each}
 								</div>
-							{/each}
-						</div>
+							</div>
+						{/each}
 					</div>
 				{/each}
 			</div>
@@ -562,13 +506,11 @@
 	{#if boughtItems.length > 0}
 		<div class="space-y-3">
 			<div class="flex items-center justify-between">
-				<h3
-					class="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider"
-				>
+				<h3 class="font-semibold  dark:text-slate-500 tracking-wider">
 					Vergangene Einkäufe
 				</h3>
 				<span
-					class="text-[10px] font-bold text-slate-500 bg-white dark:bg-slate-950 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-850 shadow-inner"
+					class="font-bold   bg-surface-200-800 px-1.5 py-0.5 rounded-md"
 				>
 					{filteredBoughtItems.length}
 				</span>
@@ -580,13 +522,14 @@
 					type="text"
 					placeholder="Suche in vergangenen Einkäufen..."
 					bind:value={searchTerm}
-					class="w-full bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:border-slate-400 dark:focus:border-slate-700 transition-colors shadow-inner"
+					class="input field-input w-full"
 				/>
 				{#if searchTerm.length > 0}
 					<button
 						type="button"
 						onclick={() => (searchTerm = '')}
-						class="absolute right-3 top-3 text-slate-400 hover:text-slate-650"
+						class="btn-icon btn-icon-sm preset-filled-primary-500 absolute right-2 top-1/2 -translate-y-1/2"
+						title="Suche zurücksetzen"
 					>
 						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path
@@ -603,51 +546,131 @@
 			<!-- Past Items List -->
 			<div class="grid grid-cols-1 gap-2">
 				{#each filteredBoughtItems as item (item.id)}
+					<!-- Swipe Container wrapper -->
 					<div
-						class="bg-white/40 dark:bg-slate-950/20 border border-slate-200/80 dark:border-slate-900/60 rounded-xl p-3 flex items-center justify-between gap-3 opacity-60 hover:opacity-100 transition-opacity"
+						class="relative overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800/80 bg-surface-100-900"
 					>
-						<div class="flex items-center gap-3 overflow-hidden flex-1">
-							<span
-								class="w-3.5 h-3.5 rounded-full shrink-0 border border-black/10"
-								style="background-color: {getCategoryColor(item.category_id)}"
-							></span>
-
-							{#if item.image_path}
-								<img
-									src="{PUBLIC_API_BASE}{item.image_path}"
-									alt={item.name}
-									class="w-8 h-8 object-cover rounded-lg border border-slate-200 dark:border-slate-850 shrink-0 opacity-80"
-								/>
-							{/if}
-
-							<div class="overflow-hidden flex-1">
-								<p
-									class="font-medium text-xs text-slate-600 dark:text-slate-350 truncate line-through"
-								>
-									{item.amount}x {item.name}
-								</p>
-							</div>
-						</div>
-
-						<!-- Re-add item button -->
-						<button
-							type="button"
-							onclick={() => handleSwitchStatus(item.id)}
-							class="w-8 h-8 bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-900 hover:bg-emerald-500/10 hover:border-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-md flex items-center justify-center transition-all cursor-pointer shrink-0"
-							title="Wieder auf Einkaufszettel setzen"
+						<!-- BACKGROUND PANELS (Swipe helpers) -->
+						<!-- Yellow edit panel (Revealed when swiping right) -->
+						<div
+							class="absolute inset-0 bg-amber-500 dark:bg-amber-600 flex items-center justify-start pl-6 text-white transition-opacity duration-150 {activeSwipeType ===
+								'right' && swipedItemId === item.id
+								? 'opacity-100'
+								: 'opacity-0'}"
 						>
-							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<svg class="w-5 h-5 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path
 									stroke-linecap="round"
 									stroke-linejoin="round"
-									stroke-width="2"
-									d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H18"
+									stroke-width="2.5"
+									d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
 								/>
 							</svg>
-						</button>
+							<span class="font-bold ml-2">Bearbeiten</span>
+						</div>
+
+						<!-- Green re-add panel (Revealed when swiping left) -->
+						<div
+							class="absolute inset-0 bg-emerald-500 dark:bg-emerald-600 flex items-center justify-end pr-6 text-white transition-opacity duration-150 {activeSwipeType ===
+								'left' && swipedItemId === item.id
+								? 'opacity-100'
+								: 'opacity-0'}"
+						>
+							<span class="font-bold mr-2">Wieder hinzufügen</span>
+							<svg class="w-5 h-5 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2.5"
+									d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+								/>
+							</svg>
+						</div>
+
+						<!-- SLIDING CARD CONTAINER -->
+						<div
+							onpointerdown={(e) => handlePointerDown(e, item)}
+							onpointermove={handlePointerMove}
+							onpointerup={(e) => handlePointerUp(e, item)}
+							class="relative bg-surface-200-800 p-2.5 flex items-center justify-between gap-3 select-none touch-pan-y active:cursor-grabbing cursor-grab"
+							style="transform: translateX({swipedItemId === item.id
+								? swipeOffset
+								: 0}px); transition: {swipedItemId === item.id
+								? 'none'
+								: 'transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1)'}"
+						>
+							<div class="flex items-center gap-3 overflow-hidden flex-1">
+								<span
+									class="w-3.5 h-3.5 rounded-full shrink-0 border border-black/10"
+									style="background-color: {getCategoryColor(item.category_id)}"
+								></span>
+
+								<div class="overflow-hidden flex-1">
+									<p class="font-bold truncate line-through">
+										{getStoreName(item.store_id)}: {item.amount}x {item.name}
+									</p>
+									<div class="flex items-center gap-2 mt-0.5">
+										{#if item.image_path}
+											<button
+												type="button"
+												onclick={(e) => openImagePreview(e, item.image_path)}
+												onpointerdown={(e) => e.stopPropagation()}
+												class="shrink-0 cursor-pointer"
+												title="Bild vergrößern"
+											>
+												<img
+													src="{PUBLIC_API_BASE}{item.image_path}"
+													alt={item.name}
+													class="w-9 h-9 object-cover rounded-lg border border-slate-200 dark:border-slate-800 pointer-events-none"
+												/>
+											</button>
+										{/if}
+										{#if item.note}
+											<p
+												class="truncate pointer-events-none italic line-through"
+											>
+												{item.note}
+											</p>
+										{/if}
+									</div>
+								</div>
+							</div>
+
+							<!-- Re-add button (backup fallback) -->
+							<button
+								type="button"
+								onclick={() => handleSwitchStatus(item.id)}
+								class="btn-icon preset-filled-success-500 rounded-lg transition-all active:scale-90 cursor-pointer shrink-0"
+								title="Wieder auf Einkaufszettel setzen"
+							>
+								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+									/>
+								</svg>
+							</button>
+						</div>
 					</div>
 				{/each}
 			</div>
 		</div>
+	{/if}
+
+	<!-- Image Preview Lightbox -->
+	{#if previewImage}
+		<button
+			type="button"
+			onclick={closeImagePreview}
+			class="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-6 cursor-pointer touch-none"
+		>
+			<img
+				src={previewImage}
+				alt="Vorschau"
+				class="max-w-full max-h-full rounded-xl border border-slate-800 object-contain"
+			/>
+		</button>
 	{/if}
 </div>

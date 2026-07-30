@@ -63,6 +63,27 @@ export const actions: Actions = {
 
 		throw redirect(303, '/');
 	},
+	uploadImage: async ({ request, params }) => {
+		const id = params.slug;
+		const formData = await request.formData();
+		const imageFile = formData.get('image') as File | null;
+		if (!imageFile || imageFile.size === 0) {
+			return fail(400, { error: 'Keine Bilddatei angegeben' });
+		}
+
+		const uploadData = new FormData();
+		uploadData.append('file', imageFile);
+
+		const uploadResult = await apiRequest(`/items/${id}/image`, {
+			method: 'POST',
+			body: uploadData
+		});
+		if (!uploadResult.ok) {
+			return fail(uploadResult.status, { error: uploadResult.message });
+		}
+
+		return { success: true };
+	},
 	delete: async ({ params }) => {
 		const id = params.slug;
 		const result = await apiRequest(`/items/${id}`, { method: 'DELETE' });

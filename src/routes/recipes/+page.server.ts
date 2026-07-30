@@ -30,16 +30,5 @@ export const actions: Actions = {
 
 		// Redirect to main shopping list page to show added ingredients
 		throw redirect(303, '/');
-	},
-	delete: async ({ request }) => {
-		const formData = await request.formData();
-		const id = Number(formData.get('id'));
-
-		const result = await apiRequest(`/recipes/${id}`, { method: 'DELETE' });
-		if (!result.ok) {
-			return fail(result.status, { error: result.message });
-		}
-
-		throw redirect(303, '/recipes');
 	}
 };

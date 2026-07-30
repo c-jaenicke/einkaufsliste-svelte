@@ -9,7 +9,8 @@
 	<div class="flex items-center gap-3">
 		<a
 			href="/more"
-			class="p-2 bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-550 dark:text-slate-400 rounded-xl transition-colors flex items-center justify-center"
+			class="btn-icon preset-filled-primary-500 rounded-xl transition-colors"
+			title="Zurück"
 		>
 			<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 				<path
@@ -21,8 +22,7 @@
 			</svg>
 		</a>
 		<div>
-			<h2 class="text-xl font-black text-slate-800 dark:text-slate-100">Kategorie: {data.name}</h2>
-			<p class="text-xs text-slate-500 dark:text-slate-400">Gefilterte Ansicht nach Kategorie</p>
+			<p class="">Gefilterte Ansicht nach Kategorie</p>
 		</div>
 	</div>
 

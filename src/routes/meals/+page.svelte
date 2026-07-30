@@ -13,6 +13,15 @@
 	// Derived array of 7 Date objects for the current week view
 	const daysOfWeek = $derived(getDaysOfWeek(currentMonday));
 
+	// Whether the viewed week is the real current week (hides the jump button when true)
+	const isCurrentWeek = $derived(
+		formatDateKey(currentMonday) === formatDateKey(getMonday(new Date()))
+	);
+
+	function goToCurrentWeek() {
+		currentMonday = getMonday(new Date());
+	}
+
 	// Derived array of recipe IDs planned for the currently viewed week
 	const currentWeekRecipeIds = $derived(
 		daysOfWeek
@@ -39,7 +48,7 @@
 	let showModal = $state(false);
 	let modalDate = $state('');
 	let modalMealType = $state('Frühstück');
-	let selectionType = $state('recipe'); // 'recipe' or 'note'
+	let selectionType = $state('note'); // 'recipe' or 'note'
 	let selectedRecipeId = $state<number | null>(null);
 	let noteValue = $state('');
 
@@ -100,7 +109,7 @@
 	function openPlanModal(dateKey: string, type: string) {
 		modalDate = dateKey;
 		modalMealType = type;
-		selectionType = 'recipe';
+		selectionType = 'note';
 		selectedRecipeId = data.recipes[0]?.id || null;
 		noteValue = '';
 		showModal = true;
@@ -115,22 +124,20 @@
 	<!-- Page Header & Week Navigator -->
 	<div class="flex flex-col gap-3">
 		<div>
-			<h2 class="text-2xl font-black tracking-tight text-slate-800 dark:text-slate-100">
-				Essensplaner
-			</h2>
-			<p class="text-xs text-slate-500 dark:text-slate-450 font-semibold">
+			<p class="font-semibold">
 				Organisiere deine Mahlzeiten für die Woche
 			</p>
 		</div>
 
 		<!-- Week Selector bar -->
 		<div
-			class="flex items-center justify-between bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 p-2.5 rounded-2xl shadow-sm"
+			class="flex items-center justify-between bg-surface-200-800 border border-slate-200 dark:border-slate-800/80 p-2.5 rounded-2xl"
 		>
 			<button
 				type="button"
 				onclick={() => navigateWeek(-1)}
-				class="p-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 text-slate-650 dark:text-slate-400 hover:bg-slate-100 rounded-xl transition-all active:scale-95 cursor-pointer flex items-center justify-center"
+				class="btn-icon preset-filled-primary-500 rounded-xl transition-all active:scale-95 cursor-pointer"
+				title="Vorherige Woche"
 			>
 				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path
@@ -142,15 +149,27 @@
 				</svg>
 			</button>
 
-			<span class="text-xs font-bold text-slate-700 dark:text-slate-300">
-				{formatDayMonth(daysOfWeek[0])} — {formatDayMonth(daysOfWeek[6])}
-				{daysOfWeek[6].getFullYear()}
-			</span>
+			<div class="flex flex-col items-center gap-1">
+				<span class="font-bold text-slate-700 dark:text-slate-300">
+					{formatDayMonth(daysOfWeek[0])} — {formatDayMonth(daysOfWeek[6])}
+					{daysOfWeek[6].getFullYear()}
+				</span>
+				{#if !isCurrentWeek}
+					<button
+						type="button"
+						onclick={goToCurrentWeek}
+						class="btn btn-sm preset-filled-primary-500 rounded-lg cursor-pointer"
+					>
+						Aktuelle Woche
+					</button>
+				{/if}
+			</div>
 
 			<button
 				type="button"
 				onclick={() => navigateWeek(1)}
-				class="p-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 text-slate-650 dark:text-slate-400 hover:bg-slate-100 rounded-xl transition-all active:scale-95 cursor-pointer flex items-center justify-center"
+				class="btn-icon preset-filled-primary-500 rounded-xl transition-all active:scale-95 cursor-pointer"
+				title="Nächste Woche"
 			>
 				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path
@@ -169,7 +188,7 @@
 				<input type="hidden" name="recipe_ids" value={currentWeekRecipeIds.join(',')} />
 				<button
 					type="submit"
-					class="w-full py-3.5 bg-emerald-500 hover:bg-emerald-450 dark:bg-emerald-600 dark:hover:bg-emerald-550 text-white dark:text-slate-950 font-black text-xs rounded-2xl flex items-center justify-center gap-2 shadow-md shadow-emerald-500/10 cursor-pointer transition-all active:scale-95"
+					class="btn preset-filled-success-500 w-full rounded-2xl cursor-pointer transition-all active:scale-95"
 				>
 					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path
@@ -192,23 +211,21 @@
 			{@const isToday = new Date().toDateString() === day.toDateString()}
 
 			<div
-				class="bg-white dark:bg-slate-900 border {isToday
+				class="bg-surface-200-800 border {isToday
 					? 'border-emerald-500/40 dark:border-emerald-500/35 ring-1 ring-emerald-500/10'
-					: 'border-slate-200 dark:border-slate-800/80'} rounded-2xl p-4 shadow-sm space-y-3 transition-all"
+					: 'border-slate-200 dark:border-slate-800/80'} rounded-2xl p-4 space-y-3 transition-all"
 			>
 				<!-- Day title -->
 				<div class="flex items-center justify-between">
 					<div class="flex items-baseline gap-2">
-						<span class="font-black text-sm text-slate-800 dark:text-slate-100"
-							>{formatWeekday(day)}</span
-						>
-						<span class="text-xs text-slate-400 dark:text-slate-500 font-semibold"
+						<span class="font-black">{formatWeekday(day)}</span>
+						<span class=" dark:text-slate-500 font-semibold"
 							>{formatDayMonth(day)}</span
 						>
 					</div>
 					{#if isToday}
 						<span
-							class="text-[9px] font-black uppercase tracking-wider text-emerald-600 bg-emerald-500/10 dark:text-emerald-400 px-2 py-0.5 rounded-full"
+							class="font-black tracking-wider text-emerald-600 bg-emerald-500/10 dark:text-emerald-400 px-2 py-0.5 rounded-full"
 						>
 							Heute
 						</span>
@@ -225,7 +242,7 @@
 						<div class="flex flex-col gap-1.5">
 							<div class="flex items-center">
 								<span
-									class="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border {getMealTypeStyle(
+									class="font-black tracking-wider px-2 py-0.5 rounded-md border {getMealTypeStyle(
 										type
 									)}"
 								>
@@ -233,20 +250,11 @@
 								</span>
 							</div>
 
-							{#if planned.length === 0}
-								<!-- Empty slot trigger -->
-								<button
-									type="button"
-									onclick={() => openPlanModal(dateKey, type)}
-									class="w-full py-2 bg-slate-50/50 dark:bg-slate-950/20 hover:bg-slate-100/50 dark:hover:bg-slate-950/40 border border-dashed border-slate-200 dark:border-slate-850 rounded-xl text-[10px] font-bold text-slate-400 dark:text-slate-500 text-center transition-colors cursor-pointer"
-								>
-									+ Mahlzeit planen
-								</button>
-							{:else}
+							{#if planned.length > 0}
 								<div class="space-y-1.5">
 									{#each planned as plan (plan.id)}
 										<div
-											class="bg-slate-50 dark:bg-slate-950/50 border border-slate-150 dark:border-slate-850 rounded-xl p-2.5 flex items-center justify-between gap-3 shadow-inner"
+											class="bg-surface-300-700 rounded-xl p-2.5 flex items-center justify-between gap-3"
 										>
 											<div class="flex items-center gap-2 overflow-hidden flex-1">
 												{#if plan.recipe}
@@ -257,63 +265,19 @@
 															alt={plan.recipe.name}
 															class="w-8 h-8 object-cover rounded-lg border border-slate-200 dark:border-slate-800 shrink-0"
 														/>
-													{:else}
-														<div
-															class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/15 flex items-center justify-center text-emerald-500 shrink-0"
-														>
-															<svg
-																class="w-4 h-4"
-																fill="none"
-																stroke="currentColor"
-																viewBox="0 0 24 24"
-															>
-																<path
-																	stroke-linecap="round"
-																	stroke-linejoin="round"
-																	stroke-width="2"
-																	d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253"
-																/>
-															</svg>
-														</div>
 													{/if}
 													<div class="overflow-hidden flex-1">
-														<span
-															class="font-bold text-slate-800 dark:text-slate-200 text-xs block truncate"
-														>
+														<span class="font-bold block truncate">
 															{plan.recipe.name}
 														</span>
-														<span class="text-[9px] text-slate-400 dark:text-slate-550 block"
-															>Rezept</span
-														>
+														<span class="list-card-subtitle block">Rezept</span>
 													</div>
 												{:else}
-													<!-- Custom text slot indicator -->
-													<div
-														class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-850 flex items-center justify-center text-slate-500 shrink-0"
-													>
-														<svg
-															class="w-4 h-4"
-															fill="none"
-															stroke="currentColor"
-															viewBox="0 0 24 24"
-														>
-															<path
-																stroke-linecap="round"
-																stroke-linejoin="round"
-																stroke-width="2"
-																d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-															/>
-														</svg>
-													</div>
 													<div class="overflow-hidden flex-1">
-														<span
-															class="font-bold text-slate-800 dark:text-slate-200 text-xs block truncate"
-														>
+														<span class="font-bold block truncate">
 															{plan.note}
 														</span>
-														<span class="text-[9px] text-slate-400 dark:text-slate-550 block"
-															>Notiz</span
-														>
+														<span class="list-card-subtitle block">Notiz</span>
 													</div>
 												{/if}
 											</div>
@@ -326,7 +290,7 @@
 														<input type="hidden" name="recipe_id" value={plan.recipe.id} />
 														<button
 															type="submit"
-															class="w-7 h-7 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-lg flex items-center justify-center transition-all cursor-pointer"
+															class="btn-icon preset-filled-success-500 rounded-lg transition-all cursor-pointer"
 															title="Zutaten auf Einkaufszettel setzen"
 														>
 															<svg
@@ -351,7 +315,7 @@
 													<input type="hidden" name="id" value={plan.id} />
 													<button
 														type="submit"
-														class="w-7 h-7 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 rounded-lg flex items-center justify-center transition-all cursor-pointer"
+														class="btn-icon preset-filled-error-500 rounded-lg transition-all cursor-pointer"
 														title="Aus Essensplaner löschen"
 													>
 														<svg
@@ -374,6 +338,16 @@
 									{/each}
 								</div>
 							{/if}
+
+							<button
+								type="button"
+								onclick={() => openPlanModal(dateKey, type)}
+								class="btn btn-sm preset-filled-success-500 w-full {planned.length === 0
+									? 'border border-dashed border-slate-200 dark:border-slate-850'
+									: ''} rounded-xl text-center transition-colors cursor-pointer"
+							>
+								+ Mahlzeit {planned.length === 0 ? 'planen' : 'hinzufügen'}
+							</button>
 						</div>
 					{/each}
 				</div>
@@ -389,20 +363,21 @@
 		transition:fade={{ duration: 150 }}
 	>
 		<div
-			class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-sm p-6 shadow-2xl space-y-5"
+			class="list-card w-full max-w-sm space-y-4"
 			transition:scale={{ start: 0.95, duration: 150 }}
 		>
 			<div class="flex items-center justify-between">
 				<div>
-					<h3 class="font-black text-slate-850 dark:text-slate-100 text-lg">Mahlzeit planen</h3>
-					<p class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold">
+					<h3 class="font-black">Mahlzeit planen</h3>
+					<p class="list-card-subtitle">
 						{modalMealType} für den {modalDate}
 					</p>
 				</div>
 				<button
 					type="button"
 					onclick={closeModal}
-					class="p-1.5 bg-slate-100 dark:bg-slate-950 border border-slate-250 dark:border-slate-850 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-slate-500 transition-colors cursor-pointer"
+					class="btn-icon preset-filled-primary-500 rounded-lg transition-colors cursor-pointer"
+					title="Schließen"
 				>
 					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path
@@ -432,68 +407,52 @@
 				<input type="hidden" name="selection_type" value={selectionType} />
 
 				<!-- Selection Type toggler -->
-				<div
-					class="grid grid-cols-2 gap-2 bg-slate-50 dark:bg-slate-950 p-1.5 rounded-xl border border-slate-200 dark:border-slate-850"
-				>
-					<button
-						type="button"
-						onclick={() => (selectionType = 'recipe')}
-						class="py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer {selectionType ===
-						'recipe'
-							? 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-emerald-600 dark:text-emerald-400 shadow-sm'
-							: 'text-slate-400 dark:text-slate-550 hover:text-slate-655'}"
-					>
-						Rezept
-					</button>
+				<div class="grid grid-cols-2 gap-2">
 					<button
 						type="button"
 						onclick={() => (selectionType = 'note')}
-						class="py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer {selectionType ===
-						'note'
-							? 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-emerald-600 dark:text-emerald-400 shadow-sm'
-							: 'text-slate-400 dark:text-slate-550 hover:text-slate-655'}"
+						class="btn btn-sm rounded-lg transition-all cursor-pointer {selectionType === 'note'
+							? 'preset-filled-primary-500'
+							: 'preset-filled-surface-500'}"
 					>
 						Notiz / Freitext
+					</button>
+					<button
+						type="button"
+						onclick={() => (selectionType = 'recipe')}
+						class="btn btn-sm rounded-lg transition-all cursor-pointer {selectionType === 'recipe'
+							? 'preset-filled-primary-500'
+							: 'preset-filled-surface-500'}"
+					>
+						Rezept
 					</button>
 				</div>
 
 				<!-- Form Options -->
 				{#if selectionType === 'recipe'}
-					<div class="space-y-1.5">
-						<label
-							for="recipe_id"
-							class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
-							>Rezept auswählen</label
-						>
-						{#if data.recipes.length === 0}
-							<div
-								class="p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-xl text-center text-xs text-slate-400 dark:text-slate-550"
-							>
-								Keine Rezepte vorhanden. <a
-									href="/recipes/new"
-									class="text-emerald-600 dark:text-emerald-400 hover:underline">Rezept erstellen</a
-								>
-							</div>
-						{:else}
+					{#if data.recipes.length === 0}
+						<div class="bg-surface-300-700 rounded-xl p-3.5 text-center">
+							<p class="font-medium">Keine Rezepte vorhanden.</p>
+							<a href="/recipes/new" class="font-bold hover:underline">Rezept erstellen</a>
+						</div>
+					{:else}
+						<label class="label">
+							<span class="label-text field-label">Rezept auswählen</span>
 							<select
 								id="recipe_id"
 								name="recipe_id"
 								bind:value={selectedRecipeId}
-								class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-250 dark:border-slate-850 rounded-xl px-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-emerald-500 transition-colors cursor-pointer"
+								class="select field-input cursor-pointer"
 							>
 								{#each data.recipes as rec}
 									<option value={rec.id}>{rec.name}</option>
 								{/each}
 							</select>
-						{/if}
-					</div>
+						</label>
+					{/if}
 				{:else}
-					<div class="space-y-1.5">
-						<label
-							for="note"
-							class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
-							>Mahlzeit beschreiben</label
-						>
+					<label class="label">
+						<span class="label-text field-label">Mahlzeit beschreiben</span>
 						<input
 							id="note"
 							name="note"
@@ -501,26 +460,24 @@
 							placeholder="z.B. Pizza bestellen, Reste essen"
 							required
 							bind:value={noteValue}
-							class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-emerald-500 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none transition-colors"
+							class="input field-input"
 						/>
-					</div>
+					</label>
 				{/if}
 
 				<!-- Action triggers -->
-				<div
-					class="pt-4 flex items-center justify-end gap-3 border-t border-slate-100 dark:border-slate-900"
-				>
+				<div class="pt-4 flex items-center justify-between gap-3 border-t border-surface-300-700">
 					<button
 						type="button"
 						onclick={closeModal}
-						class="px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 hover:bg-slate-100 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+						class="btn preset-filled-warning-500 px-5 py-3 rounded-xl font-bold text-center cursor-pointer"
 					>
 						Abbrechen
 					</button>
 					<button
 						type="submit"
 						disabled={selectionType === 'recipe' && data.recipes.length === 0}
-						class="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-xs rounded-xl shadow-md transition-all disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
+						class="btn preset-filled-success-500 px-6 py-3 rounded-xl font-bold transition-all disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
 					>
 						Speichern
 					</button>

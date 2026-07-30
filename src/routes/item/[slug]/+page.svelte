@@ -1,11 +1,49 @@
 <script lang="ts">
 	import { env } from '$env/dynamic/public';
+	import { invalidateAll } from '$app/navigation';
+	import { submitFormWithProgress, postFormDataWithProgress } from '$lib/uploadForm';
 	const PUBLIC_API_BASE = env.PUBLIC_API_BASE;
 
 	const { data } = $props();
 
 	// Svelte 5 reactive amount state
 	let amountItem = $state(data.item.amount);
+	let uploading = $state(false);
+	let uploadProgress = $state(0);
+	let imageUploading = $state(false);
+	let imageUploadProgress = $state(0);
+	let imageError = $state('');
+
+	// Upload the image as soon as it's picked, so the user can see the
+	// preview immediately instead of only after saving the whole form.
+	async function handleImageChange(e: Event) {
+		const input = e.currentTarget as HTMLInputElement;
+		const file = input.files?.[0];
+		if (!file) return;
+
+		const formData = new FormData();
+		formData.append('image', file);
+
+		imageError = '';
+		imageUploading = true;
+		imageUploadProgress = 0;
+		try {
+			const result = await postFormDataWithProgress(
+				'?/uploadImage',
+				formData,
+				(p) => (imageUploadProgress = p)
+			);
+			if (result.type === 'failure' || result.type === 'error') {
+				imageError = 'Bild-Upload fehlgeschlagen';
+			} else {
+				await invalidateAll();
+			}
+		} catch {
+			imageError = 'Bild-Upload fehlgeschlagen';
+		} finally {
+			imageUploading = false;
+		}
+	}
 
 	function incrementAmount() {
 		amountItem++;
@@ -16,206 +54,219 @@
 			amountItem--;
 		}
 	}
+
+	async function handleSubmit(e: SubmitEvent) {
+		// Delete / Bild entfernen use their own formaction and don't upload a
+		// file, so let those submit natively — only intercept the Save submit.
+		const submitter = e.submitter as HTMLButtonElement | null;
+		if (submitter?.hasAttribute('formaction')) return;
+
+		e.preventDefault();
+		uploading = true;
+		uploadProgress = 0;
+		try {
+			await submitFormWithProgress(e.currentTarget as HTMLFormElement, (p) => (uploadProgress = p));
+		} finally {
+			uploading = false;
+		}
+	}
 </script>
 
 {#key data.item.id}
 	<div class="space-y-6">
 		<!-- Page Header -->
-		<div class="flex items-center gap-3">
-			<a
-				href="/"
-				class="p-2 bg-slate-950 border border-slate-850 hover:bg-slate-800 text-slate-400 rounded-xl transition-colors flex items-center justify-center"
-			>
-				<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2.5"
-						d="M15 19l-7-7 7-7"
-					/>
-				</svg>
-			</a>
-			<div>
-				<h2 class="text-xl font-black text-slate-100">Eintrag bearbeiten</h2>
-				<p class="text-xs text-slate-400">Passe Details oder das Bild des Artikels an</p>
-			</div>
-		</div>
+		<p class="">Passe Details oder das Bild des Artikels an</p>
 
-		<!-- Edit Form -->
 		<form
 			method="POST"
 			action="?/save"
 			enctype="multipart/form-data"
-			class="space-y-5 bg-white dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm"
+			onsubmit={handleSubmit}
+			class="w-full space-y-4"
 		>
-			<!-- Name Field -->
-			<div class="space-y-1.5">
-				<label
-					for="name"
-					class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
-					>Name</label
-				>
-				<input
-					id="name"
-					name="name"
-					type="text"
-					value={data.item.name}
-					required
-					maxlength="50"
-					class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-emerald-500 rounded-xl px-4 py-3 text-slate-800 dark:text-slate-200 focus:outline-none transition-colors"
-				/>
-			</div>
-
-			<!-- Note Field -->
-			<div class="space-y-1.5">
-				<label
-					for="note"
-					class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
-					>Notiz</label
-				>
-				<input
-					id="note"
-					name="note"
-					type="text"
-					value={data.item.note || ''}
-					maxlength="100"
-					class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-emerald-500 rounded-xl px-4 py-3 text-slate-800 dark:text-slate-200 focus:outline-none transition-colors"
-				/>
-			</div>
-
-			<!-- Amount Stepper -->
-			<div class="space-y-1.5">
-				<label
-					for="amount"
-					class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block"
-					>Menge</label
-				>
-				<div class="flex items-center gap-3">
-					<button
-						type="button"
-						onclick={decreaseAmount}
-						class="w-12 h-12 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-850 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xl rounded-xl flex items-center justify-center transition-colors active:scale-95 cursor-pointer"
-					>
-						-
-					</button>
+			<fieldset class="space-y-4">
+				<!-- Name Field -->
+				<label class="label">
+					<span class="label-text field-label">Name</span>
 					<input
-						id="amount"
-						name="amount"
-						type="number"
+						id="name"
+						name="name"
+						type="text"
+						value={data.item.name}
 						required
-						min="1"
-						max="100"
-						bind:value={amountItem}
-						class="flex-1 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl h-12 text-center text-slate-800 dark:text-slate-100 font-bold text-lg focus:outline-none"
+						maxlength="50"
+						class="input field-input"
 					/>
-					<button
-						type="button"
-						onclick={incrementAmount}
-						class="w-12 h-12 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-850 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xl rounded-xl flex items-center justify-center transition-colors active:scale-95 cursor-pointer"
-					>
-						+
-					</button>
-				</div>
-			</div>
+				</label>
 
-			<!-- Store Selector -->
-			<div class="space-y-1.5">
-				<label
-					for="store"
-					class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
-					>Laden</label
-				>
-				<select
-					id="store"
-					name="store"
-					class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-emerald-500 transition-colors"
-				>
-					{#each data.stores as store}
-						<option value={store.id} selected={store.id === data.item.store_id}>{store.name}</option
+				<!-- Note Field -->
+				<label class="label">
+					<span class="label-text field-label">Notiz</span>
+					<input
+						id="note"
+						name="note"
+						type="text"
+						value={data.item.note || ''}
+						maxlength="100"
+						class="input field-input"
+					/>
+				</label>
+
+				<!-- Amount Stepper -->
+				<label class="label">
+					<span class="label-text field-label">Menge</span>
+					<div class="flex items-center gap-3 w-full">
+						<button
+							type="button"
+							onclick={decreaseAmount}
+							class="btn preset-filled-primary-500 w-12 h-12 rounded-xl flex items-center justify-center font-bold active:scale-95 cursor-pointer"
 						>
-					{/each}
-				</select>
-			</div>
-
-			<!-- Category Selector -->
-			<div class="space-y-1.5">
-				<label
-					for="cat"
-					class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
-					>Kategorie</label
-				>
-				<select
-					id="cat"
-					name="cat"
-					class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-emerald-500 transition-colors"
-				>
-					{#each data.categories as cat}
-						<option value={cat.id} selected={cat.id === data.item.category_id}>{cat.name}</option>
-					{/each}
-				</select>
-			</div>
-
-			<!-- Image Upload / Display Section -->
-			<div class="space-y-2 pt-2">
-				<span
-					class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block"
-					>Artikelbild</span
-				>
-
-				{#if data.item.image_path}
-					<div
-						class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 p-3.5 rounded-xl space-y-3"
-					>
-						<img
-							src="{PUBLIC_API_BASE}{data.item.image_path}"
-							alt={data.item.name}
-							class="w-full h-40 object-cover rounded-lg border border-slate-200 dark:border-slate-800 shadow-md"
+							-
+						</button>
+						<input
+							id="amount"
+							name="amount"
+							type="number"
+							required
+							min="1"
+							max="100"
+							bind:value={amountItem}
+							class="input field-input flex-1 text-center font-bold h-12"
 						/>
 						<button
-							type="submit"
-							formaction="?/deleteImage"
-							class="w-full py-2 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold rounded-lg transition-colors cursor-pointer"
+							type="button"
+							onclick={incrementAmount}
+							class="btn preset-filled-primary-500 w-12 h-12 rounded-xl flex items-center justify-center font-bold active:scale-95 cursor-pointer"
 						>
-							Bild entfernen
+							+
 						</button>
 					</div>
-				{:else}
-					<div
-						class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 p-4 rounded-xl flex flex-col items-center justify-center text-center border-dashed border-slate-300 dark:border-slate-800 relative"
-					>
-						<svg
-							class="w-8 h-8 text-slate-400 dark:text-slate-650 mb-2"
-							fill="none"
-							stroke="currentColor"
-							viewBox="0 0 24 24"
-						>
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="1.5"
-								d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-							/>
-						</svg>
-						<span class="text-xs text-slate-400 dark:text-slate-500 font-semibold"
-							>Kein Bild hochgeladen</span
-						>
-						<input
-							type="file"
-							name="image"
-							accept="image/*"
-							class="mt-3 block w-full text-xs text-slate-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-100 dark:file:bg-slate-900 file:text-slate-600 dark:file:text-slate-400 hover:file:bg-slate-200 cursor-pointer"
-						/>
-					</div>
-				{/if}
-			</div>
+				</label>
 
-			<!-- Footer actions -->
-			<div class="pt-4 flex items-center justify-between gap-3">
+				<!-- Store Selector -->
+				<label class="label">
+					<span class="label-text field-label">Laden</span>
+					<select id="store" name="store" class="select field-input">
+						{#each data.stores as store}
+							<option value={store.id} selected={store.id === data.item.store_id}
+								>{store.name}</option
+							>
+						{/each}
+					</select>
+				</label>
+
+				<!-- Category Selector -->
+				<label class="label">
+					<span class="label-text field-label">Kategorie</span>
+					<select id="cat" name="cat" class="select field-input">
+						{#each data.categories as cat}
+							<option value={cat.id} selected={cat.id === data.item.category_id}>{cat.name}</option>
+						{/each}
+					</select>
+				</label>
+
+				<!-- Image Upload / Display Section -->
+				<label class="label pt-2">
+					<span class="label-text field-label">Artikelbild</span>
+
+					{#if data.item.image_path}
+						<div
+							class="bg-surface-200/50 dark:bg-surface-950/40 border border-slate-200 dark:border-slate-850 p-3.5 rounded-xl space-y-3 w-full"
+						>
+							<img
+								src="{PUBLIC_API_BASE}{data.item.image_path}"
+								alt={data.item.name}
+								class="w-full h-40 object-cover rounded-lg border border-slate-200 dark:border-slate-800"
+							/>
+							<button
+								type="submit"
+								formaction="?/deleteImage"
+								class="btn preset-filled-error-500 w-full py-2 font-bold rounded-lg cursor-pointer"
+							>
+								Bild entfernen
+							</button>
+						</div>
+					{:else}
+						<div
+							class="bg-surface-200/50 dark:bg-surface-950/40 border border-slate-200 dark:border-slate-850 p-4 rounded-xl flex flex-col items-center justify-center text-center border-dashed border-slate-300 dark:border-slate-800 relative w-full"
+						>
+							<svg
+								class="w-8 h-8  dark:text-slate-650 mb-2"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+							>
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="1.5"
+									d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+								/>
+							</svg>
+							<span class=" dark:text-slate-500 font-semibold"
+								>Kein Bild hochgeladen</span
+							>
+							<input
+								type="file"
+								name="image"
+								accept="image/*"
+								onchange={handleImageChange}
+								disabled={imageUploading}
+								class="mt-3 block w-full text-slate-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:font-semibold file:bg-slate-100 dark:file:bg-surface-800 file:text-slate-600 dark:file: hover:file:bg-slate-200 cursor-pointer disabled:opacity-50"
+							/>
+							{#if imageUploading}
+								<div class="w-full mt-3">
+									<p class="font-medium">Bild wird hochgeladen… {imageUploadProgress}%</p>
+									<div class="w-full h-2 rounded-full bg-surface-300-700 overflow-hidden mt-1">
+										<div
+											class="h-full bg-success-500 transition-all"
+											style="width: {imageUploadProgress}%"
+										></div>
+									</div>
+								</div>
+							{/if}
+							{#if imageError}
+								<p class="font-medium mt-2 text-error-500">{imageError}</p>
+							{/if}
+						</div>
+					{/if}
+				</label>
+			</fieldset>
+
+			{#if uploading}
+				<div class="list-card">
+					<p class="font-medium">Wird gespeichert… {uploadProgress}%</p>
+					<div class="w-full h-2 rounded-full bg-surface-300-700 overflow-hidden mt-2">
+						<div
+							class="h-full bg-success-500 transition-all"
+							style="width: {uploadProgress}%"
+						></div>
+					</div>
+				</div>
+			{/if}
+
+			<!-- Footer actions conforming to design rules -->
+			<fieldset class="pt-4 flex flex-col gap-3 border-t border-slate-200 dark:border-slate-900">
+				<div class="flex items-center justify-between gap-3">
+					<a
+						href="/"
+						class="btn preset-filled-warning-500 px-5 py-3 rounded-xl font-bold text-center"
+					>
+						Abbrechen
+					</a>
+					<button
+						type="submit"
+						disabled={uploading}
+						class="btn preset-filled-success-500 px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-1 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
+					>
+						Speichern
+					</button>
+				</div>
 				<!-- Delete trigger -->
 				<button
 					type="submit"
 					formaction="?/delete"
-					class="px-4 py-3 bg-rose-500/10 border border-rose-500/25 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 font-bold text-sm rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
+					class="btn preset-filled-error-500 px-4 py-3 rounded-xl font-bold flex items-center gap-1.5 cursor-pointer self-start"
 				>
 					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path
@@ -227,22 +278,7 @@
 					</svg>
 					Löschen
 				</button>
-
-				<div class="flex items-center gap-3">
-					<a
-						href="/"
-						class="px-5 py-3 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-500 dark:text-slate-400 font-bold text-sm rounded-xl transition-colors"
-					>
-						Abbrechen
-					</a>
-					<button
-						type="submit"
-						class="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-sm rounded-xl shadow-md transition-all flex items-center gap-1 cursor-pointer"
-					>
-						Speichern
-					</button>
-				</div>
-			</div>
+			</fieldset>
 		</form>
 	</div>
 {/key}

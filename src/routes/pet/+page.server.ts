@@ -2,29 +2,22 @@ import { apiJson, apiRequest } from '$lib/server/api';
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ url }) => {
-	// 1. Load all pets
+export const load: PageServerLoad = async () => {
 	const pets = await apiJson('/pets');
 
-	if (pets.length === 0) {
-		return { pets: [], selectedPet: null, logs: [] };
-	}
+	// Load activity logs for every pet so each gets its own collapsible section.
+	const petsWithLogs = await Promise.all(
+		pets.map(async (pet: any) => {
+			try {
+				const logs = await apiJson(`/pets/${pet.id}/logs`);
+				return { ...pet, logs };
+			} catch {
+				return { ...pet, logs: [] };
+			}
+		})
+	);
 
-	// 2. Resolve selected pet ID from query params or default to first pet
-	const selectedIdParam = url.searchParams.get('id');
-	let selectedId = selectedIdParam ? Number(selectedIdParam) : pets[0].id;
-
-	// Ensure the selected ID actually exists, otherwise fallback
-	let selectedPet = pets.find((p: any) => p.id === selectedId);
-	if (!selectedPet) {
-		selectedPet = pets[0];
-		selectedId = selectedPet.id;
-	}
-
-	// 3. Load logs for the selected pet
-	const logs = await apiJson(`/pets/${selectedId}/logs`);
-
-	return { pets, selectedPet, logs };
+	return { pets: petsWithLogs };
 };
 
 export const actions: Actions = {
@@ -42,7 +35,7 @@ export const actions: Actions = {
 			return fail(result.status, { error: result.message });
 		}
 
-		throw redirect(303, `/pet?id=${petId}`);
+		throw redirect(303, `/pet`);
 	},
 	toggleLocation: async ({ request }) => {
 		const formData = await request.formData();
@@ -53,23 +46,6 @@ export const actions: Actions = {
 			return fail(result.status, { error: result.message });
 		}
 
-		throw redirect(303, `/pet?id=${petId}`);
-	},
-	addPet: async ({ request }) => {
-		const formData = await request.formData();
-		const name = formData.get('name') as string;
-
-		if (name && name.trim()) {
-			const result = await apiRequest('/pets', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ name })
-			});
-			if (!result.ok) {
-				return fail(result.status, { error: result.message });
-			}
-			throw redirect(303, `/pet?id=${result.data.id}`);
-		}
 		throw redirect(303, `/pet`);
 	}
 };

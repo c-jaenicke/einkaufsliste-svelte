@@ -5,6 +5,21 @@ import adapter from '@sveltejs/adapter-node';
 import { sveltekit } from '@sveltejs/kit/vite';
 
 export default defineConfig({
+	server: {
+		// Proxy same-origin so the browser's client-side fetches/<img src> never
+		// need PUBLIC_API_BASE to be a cross-origin absolute URL — that broke as
+		// soon as the page was opened from something other than exactly the
+		// hostname baked into PUBLIC_API_BASE (CORS + third-party cookie
+		// rejection from a different host/IP, e.g. testing from a phone on the
+		// LAN or opening the same dev server via "localhost" vs its LAN IP).
+		proxy: {
+			'/api': {
+				target: 'http://localhost:8080',
+				changeOrigin: true,
+				rewrite: (path) => path.replace(/^\/api/, '')
+			}
+		}
+	},
 	plugins: [
 		tailwindcss(),
 		sveltekit({

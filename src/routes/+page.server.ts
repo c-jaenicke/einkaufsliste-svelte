@@ -5,12 +5,11 @@ import type { PageServerLoad } from './$types';
 // from the browser against PUBLIC_API_BASE (see +page.svelte / $lib/sync.ts)
 // as part of its offline-first design, so there are no form actions here.
 export const load: PageServerLoad = async () => {
-	const [stores, categories, items, frequent] = await Promise.all([
+	const [stores, categories, items] = await Promise.all([
 		apiJson('/stores'),
 		apiJson('/categories'),
-		apiJson('/items'),
-		apiJson('/items/frequent')
+		apiJson('/items')
 	]);
 
-	return { stores, categories, items, frequent };
+	return { stores, categories, items };
 };

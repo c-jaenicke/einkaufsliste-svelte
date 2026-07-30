@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { env } from '$env/dynamic/public';
+	import { submitFormWithProgress } from '$lib/uploadForm';
 	const PUBLIC_API_BASE = env.PUBLIC_API_BASE;
 
 	const { data } = $props();
@@ -8,6 +9,19 @@
 	let amountItem = $state(1);
 	let nameValue = $state('');
 	let suggestions = $state<string[]>([]);
+	let uploading = $state(false);
+	let uploadProgress = $state(0);
+
+	async function handleSubmit(e: SubmitEvent) {
+		e.preventDefault();
+		uploading = true;
+		uploadProgress = 0;
+		try {
+			await submitFormWithProgress(e.currentTarget as HTMLFormElement, (p) => (uploadProgress = p));
+		} finally {
+			uploading = false;
+		}
+	}
 
 	// Amount adjustment handlers
 	function incrementAmount() {
@@ -48,172 +62,165 @@
 	}
 </script>
 
-<div class="space-y-6">
-	<!-- Page Header -->
-	<div class="flex items-center gap-3">
-		<a
-			href="/"
-			class="p-2 bg-slate-950 border border-slate-850 hover:bg-slate-800 text-slate-400 rounded-xl transition-colors flex items-center justify-center"
-		>
-			<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-				<path
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					stroke-width="2.5"
-					d="M15 19l-7-7 7-7"
-				/>
-			</svg>
-		</a>
-		<div>
-			<h2 class="text-xl font-black text-slate-100">Neuer Eintrag</h2>
-			<p class="text-xs text-slate-400">Füge der Einkaufsliste einen Artikel hinzu</p>
-		</div>
-	</div>
+<div class="space-y-4">
+	<!-- Page Subtitle -->
+	<p class=" px-1">Füge der Einkaufsliste einen Artikel hinzu</p>
 
-	<!-- Add form -->
 	<form
 		method="POST"
 		action="?/new"
-		class="space-y-5 bg-white dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm"
+		enctype="multipart/form-data"
+		onsubmit={handleSubmit}
+		class="w-full space-y-4"
 	>
-		<!-- Name Field with Autocomplete suggestions -->
-		<div class="space-y-1.5 relative">
-			<label
-				for="name"
-				class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
-				>Name</label
-			>
-			<input
-				id="name"
-				name="name"
-				type="text"
-				placeholder="z.B. Äpfel, Milch, Brot"
-				value={nameValue}
-				oninput={handleInput}
-				required
-				maxlength="50"
-				autocomplete="off"
-				class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-emerald-500 rounded-xl px-4 py-3 text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none transition-colors"
-			/>
-
-			<!-- Autocomplete dropdown badges -->
-			{#if suggestions.length > 0}
-				<div class="flex flex-wrap gap-1.5 pt-1.5">
-					{#each suggestions as sug}
-						<button
-							type="button"
-							onclick={() => selectSuggestion(sug)}
-							class="px-2.5 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold rounded-lg border border-emerald-500/20 transition-colors cursor-pointer"
-						>
-							{sug}
-						</button>
-					{/each}
-				</div>
-			{/if}
-		</div>
-
-		<!-- Note Field -->
-		<div class="space-y-1.5">
-			<label
-				for="note"
-				class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
-				>Notiz</label
-			>
-			<input
-				id="note"
-				name="note"
-				type="text"
-				placeholder="z.B. Bio, Fettarm, Packung"
-				maxlength="100"
-				class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-emerald-500 rounded-xl px-4 py-3 text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none transition-colors"
-			/>
-		</div>
-
-		<!-- Amount Stepper -->
-		<div class="space-y-1.5">
-			<label
-				for="amount"
-				class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block"
-				>Menge</label
-			>
-			<div class="flex items-center gap-3">
-				<button
-					type="button"
-					onclick={decreaseAmount}
-					class="w-12 h-12 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-850 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xl rounded-xl flex items-center justify-center transition-colors active:scale-95 cursor-pointer"
-				>
-					-
-				</button>
+		<fieldset class="space-y-4">
+			<!-- Name Field with Autocomplete suggestions -->
+			<label class="label relative">
+				<span class="label-text field-label">Name</span>
 				<input
-					id="amount"
-					name="amount"
-					type="number"
+					id="name"
+					name="name"
+					type="text"
+					placeholder="z.B. Äpfel, Milch, Brot"
+					value={nameValue}
+					oninput={handleInput}
 					required
-					min="1"
-					max="100"
-					bind:value={amountItem}
-					class="flex-1 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl h-12 text-center text-slate-800 dark:text-slate-100 font-bold text-lg focus:outline-none"
+					maxlength="50"
+					autocomplete="off"
+					class="input field-input"
 				/>
-				<button
-					type="button"
-					onclick={incrementAmount}
-					class="w-12 h-12 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-850 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xl rounded-xl flex items-center justify-center transition-colors active:scale-95 cursor-pointer"
+
+				<!-- Autocomplete dropdown badges -->
+				{#if suggestions.length > 0}
+					<div class="flex flex-wrap gap-1.5 pt-1.5 w-full">
+						{#each suggestions as sug}
+							<button
+								type="button"
+								onclick={() => selectSuggestion(sug)}
+								class="btn btn-sm preset-filled-success-500 rounded-lg transition-colors cursor-pointer"
+							>
+								{sug}
+							</button>
+						{/each}
+					</div>
+				{/if}
+			</label>
+
+			<!-- Note Field -->
+			<label class="label">
+				<span class="label-text field-label">Notiz</span>
+				<input
+					id="note"
+					name="note"
+					type="text"
+					placeholder="z.B. Bio, Fettarm, Packung"
+					maxlength="100"
+					class="input field-input"
+				/>
+			</label>
+
+			<!-- Amount Stepper -->
+			<label class="label">
+				<span class="label-text field-label">Menge</span>
+				<div class="flex items-center gap-3 w-full">
+					<button
+						type="button"
+						onclick={decreaseAmount}
+						class="btn preset-filled-primary-500 w-12 h-12 rounded-xl flex items-center justify-center font-bold active:scale-95 cursor-pointer"
+					>
+						-
+					</button>
+					<input
+						id="amount"
+						name="amount"
+						type="number"
+						required
+						min="1"
+						max="100"
+						bind:value={amountItem}
+						class="input field-input flex-1 text-center font-bold h-12"
+					/>
+					<button
+						type="button"
+						onclick={incrementAmount}
+						class="btn preset-filled-primary-500 w-12 h-12 rounded-xl flex items-center justify-center font-bold active:scale-95 cursor-pointer"
+					>
+						+
+					</button>
+				</div>
+			</label>
+
+			<!-- Store Dropdown selector -->
+			<label class="label">
+				<span class="label-text field-label">Laden</span>
+				<select id="store" name="store" class="select field-input">
+					{#each data.stores as store}
+						<option value={store.id}>{store.name}</option>
+					{/each}
+				</select>
+			</label>
+
+			<!-- Category Dropdown selector -->
+			<label class="label">
+				<span class="label-text field-label">Kategorie</span>
+				<select id="cat" name="cat" class="select field-input">
+					{#each data.cats as cat}
+						<option value={cat.id}>{cat.name}</option>
+					{/each}
+				</select>
+			</label>
+
+			<!-- Image Upload -->
+			<label class="label pt-2">
+				<span class="label-text field-label">Artikelbild</span>
+				<div
+					class="bg-surface-200/50 dark:bg-surface-950/40 border border-slate-200 dark:border-slate-850 p-4 rounded-xl flex flex-col items-center justify-center text-center border-dashed w-full"
 				>
-					+
-				</button>
+					<svg
+						class="w-8 h-8  dark:text-slate-650 mb-2"
+						fill="none"
+						stroke="currentColor"
+						viewBox="0 0 24 24"
+					>
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="1.5"
+							d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+						/>
+					</svg>
+					<span class=" dark:text-slate-500 font-semibold">Kein Bild ausgewählt</span>
+					<input
+						type="file"
+						name="image"
+						accept="image/*"
+						class="mt-3 block w-full text-slate-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:font-semibold file:bg-slate-100 dark:file:bg-surface-800 file:text-slate-600 dark:file: hover:file:bg-slate-200 cursor-pointer"
+					/>
+				</div>
+			</label>
+		</fieldset>
+
+		{#if uploading}
+			<div class="list-card">
+				<p class="font-medium">Wird gespeichert… {uploadProgress}%</p>
+				<div class="w-full h-2 rounded-full bg-surface-300-700 overflow-hidden mt-2">
+					<div class="h-full bg-success-500 transition-all" style="width: {uploadProgress}%"></div>
+				</div>
 			</div>
-		</div>
+		{/if}
 
-		<!-- Store Dropdown selector -->
-		<div class="space-y-1.5">
-			<label
-				for="store"
-				class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
-				>Laden</label
-			>
-			<select
-				id="store"
-				name="store"
-				class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-emerald-500 transition-colors"
-			>
-				{#each data.stores as store}
-					<option value={store.id}>{store.name}</option>
-				{/each}
-			</select>
-		</div>
-
-		<!-- Category Dropdown selector -->
-		<div class="space-y-1.5">
-			<label
-				for="cat"
-				class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
-				>Kategorie</label
-			>
-			<select
-				id="cat"
-				name="cat"
-				class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-emerald-500 transition-colors"
-			>
-				{#each data.cats as cat}
-					<option value={cat.id}>{cat.name}</option>
-				{/each}
-			</select>
-		</div>
-
-		<!-- Action buttons -->
-		<div class="pt-4 flex items-center justify-end gap-3">
-			<a
-				href="/"
-				class="px-5 py-3 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-200 dark:hover:bg-slate-850 text-slate-500 dark:text-slate-400 font-bold text-sm rounded-xl transition-colors text-center"
-			>
+		<!-- Action buttons conforming to design rules -->
+		<fieldset class="pt-4 flex items-center justify-between gap-3">
+			<a href="/" class="btn preset-filled-warning-500 px-5 py-3 rounded-xl font-bold text-center">
 				Abbrechen
 			</a>
 			<button
 				type="submit"
-				class="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-sm rounded-xl shadow-md transition-all flex items-center gap-1 cursor-pointer"
+				disabled={uploading}
+				class="btn preset-filled-success-500 px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-1 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
 			>
 				Eintrag hinzufügen
 			</button>
-		</div>
+		</fieldset>
 	</form>
 </div>

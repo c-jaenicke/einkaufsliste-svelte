@@ -6,18 +6,12 @@ export const actions: Actions = {
 	new: async ({ request }) => {
 		const formData = await request.formData();
 		const name = formData.get('name') as string;
-		const type = formData.get('type') as string;
-		let payload: any = { name };
+		const color = formData.get('color') as string;
 
-		if (type === 'category') {
-			payload.color = formData.get('color') as string;
-		}
-
-		const endpoint = type === 'category' ? '/categories' : '/stores';
-		const result = await apiRequest(endpoint, {
+		const result = await apiRequest('/categories', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify(payload)
+			body: JSON.stringify({ name, color })
 		});
 		if (!result.ok) {
 			return fail(result.status, { error: result.message });

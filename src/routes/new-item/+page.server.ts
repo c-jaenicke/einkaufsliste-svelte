@@ -34,6 +34,21 @@ export const actions: Actions = {
 			return fail(result.status, { error: result.message });
 		}
 
+		// Upload the image (if provided) now that the item has an id
+		const imageFile = formData.get('image') as File | null;
+		if (imageFile && imageFile.size > 0) {
+			const uploadData = new FormData();
+			uploadData.append('file', imageFile);
+
+			const uploadResult = await apiRequest(`/items/${result.data.id}/image`, {
+				method: 'POST',
+				body: uploadData
+			});
+			if (!uploadResult.ok) {
+				return fail(uploadResult.status, { error: uploadResult.message });
+			}
+		}
+
 		throw redirect(303, '/');
 	}
 };
