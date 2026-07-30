@@ -124,9 +124,7 @@
 	<!-- Page Header & Week Navigator -->
 	<div class="flex flex-col gap-3">
 		<div>
-			<p class="font-semibold">
-				Organisiere deine Mahlzeiten für die Woche
-			</p>
+			<p class="font-semibold">Organisiere deine Mahlzeiten für die Woche</p>
 		</div>
 
 		<!-- Week Selector bar -->
@@ -219,9 +217,7 @@
 				<div class="flex items-center justify-between">
 					<div class="flex items-baseline gap-2">
 						<span class="font-black">{formatWeekday(day)}</span>
-						<span class=" dark:text-slate-500 font-semibold"
-							>{formatDayMonth(day)}</span
-						>
+						<span class=" dark:text-slate-500 font-semibold">{formatDayMonth(day)}</span>
 					</div>
 					{#if isToday}
 						<span

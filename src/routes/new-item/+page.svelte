@@ -1,14 +1,14 @@
 <script lang="ts">
-	import { env } from '$env/dynamic/public';
 	import { submitFormWithProgress } from '$lib/uploadForm';
-	const PUBLIC_API_BASE = env.PUBLIC_API_BASE;
+	import AmountStepper from '$lib/AmountStepper.svelte';
+	import ImageDropzone from '$lib/ImageDropzone.svelte';
+	import NameAutocompleteInput from '$lib/NameAutocompleteInput.svelte';
+	import FavoriteToggleField from '$lib/FavoriteToggleField.svelte';
 
 	const { data } = $props();
 
-	// Reactive states
 	let amountItem = $state(1);
-	let nameValue = $state('');
-	let suggestions = $state<string[]>([]);
+	let isFavorite = $state(false);
 	let uploading = $state(false);
 	let uploadProgress = $state(0);
 
@@ -21,44 +21,6 @@
 		} finally {
 			uploading = false;
 		}
-	}
-
-	// Amount adjustment handlers
-	function incrementAmount() {
-		amountItem++;
-	}
-
-	function decreaseAmount() {
-		if (amountItem > 1) {
-			amountItem--;
-		}
-	}
-
-	// Autocomplete fetcher with 150ms debounce
-	let debounceTimeout: any;
-	function handleInput(e: Event) {
-		const val = (e.target as HTMLInputElement).value;
-		nameValue = val;
-		clearTimeout(debounceTimeout);
-		debounceTimeout = setTimeout(async () => {
-			if (val.trim().length > 1) {
-				try {
-					const res = await fetch(`${PUBLIC_API_BASE}/items/suggest?q=${encodeURIComponent(val)}`);
-					if (res.ok) {
-						suggestions = await res.json();
-					}
-				} catch (err) {
-					console.error('Failed to load name autocomplete', err);
-				}
-			} else {
-				suggestions = [];
-			}
-		}, 150);
-	}
-
-	function selectSuggestion(sug: string) {
-		nameValue = sug;
-		suggestions = [];
 	}
 </script>
 
@@ -74,37 +36,14 @@
 		class="w-full space-y-4"
 	>
 		<fieldset class="space-y-4">
-			<!-- Name Field with Autocomplete suggestions -->
-			<label class="label relative">
-				<span class="label-text field-label">Name</span>
-				<input
-					id="name"
-					name="name"
-					type="text"
-					placeholder="z.B. Äpfel, Milch, Brot"
-					value={nameValue}
-					oninput={handleInput}
-					required
-					maxlength="50"
-					autocomplete="off"
-					class="input field-input"
-				/>
-
-				<!-- Autocomplete dropdown badges -->
-				{#if suggestions.length > 0}
-					<div class="flex flex-wrap gap-1.5 pt-1.5 w-full">
-						{#each suggestions as sug}
-							<button
-								type="button"
-								onclick={() => selectSuggestion(sug)}
-								class="btn btn-sm preset-filled-success-500 rounded-lg transition-colors cursor-pointer"
-							>
-								{sug}
-							</button>
-						{/each}
-					</div>
-				{/if}
-			</label>
+			<NameAutocompleteInput
+				id="name"
+				name="name"
+				label="Name"
+				placeholder="z.B. Äpfel, Milch, Brot"
+				required
+				maxlength={50}
+			/>
 
 			<!-- Note Field -->
 			<label class="label">
@@ -122,32 +61,7 @@
 			<!-- Amount Stepper -->
 			<label class="label">
 				<span class="label-text field-label">Menge</span>
-				<div class="flex items-center gap-3 w-full">
-					<button
-						type="button"
-						onclick={decreaseAmount}
-						class="btn preset-filled-primary-500 w-12 h-12 rounded-xl flex items-center justify-center font-bold active:scale-95 cursor-pointer"
-					>
-						-
-					</button>
-					<input
-						id="amount"
-						name="amount"
-						type="number"
-						required
-						min="1"
-						max="100"
-						bind:value={amountItem}
-						class="input field-input flex-1 text-center font-bold h-12"
-					/>
-					<button
-						type="button"
-						onclick={incrementAmount}
-						class="btn preset-filled-primary-500 w-12 h-12 rounded-xl flex items-center justify-center font-bold active:scale-95 cursor-pointer"
-					>
-						+
-					</button>
-				</div>
+				<AmountStepper bind:value={amountItem} />
 			</label>
 
 			<!-- Store Dropdown selector -->
@@ -171,33 +85,10 @@
 			</label>
 
 			<!-- Image Upload -->
-			<label class="label pt-2">
-				<span class="label-text field-label">Artikelbild</span>
-				<div
-					class="bg-surface-200/50 dark:bg-surface-950/40 border border-slate-200 dark:border-slate-850 p-4 rounded-xl flex flex-col items-center justify-center text-center border-dashed w-full"
-				>
-					<svg
-						class="w-8 h-8  dark:text-slate-650 mb-2"
-						fill="none"
-						stroke="currentColor"
-						viewBox="0 0 24 24"
-					>
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="1.5"
-							d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-						/>
-					</svg>
-					<span class=" dark:text-slate-500 font-semibold">Kein Bild ausgewählt</span>
-					<input
-						type="file"
-						name="image"
-						accept="image/*"
-						class="mt-3 block w-full text-slate-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:font-semibold file:bg-slate-100 dark:file:bg-surface-800 file:text-slate-600 dark:file: hover:file:bg-slate-200 cursor-pointer"
-					/>
-				</div>
-			</label>
+			<ImageDropzone label="Artikelbild" />
+
+			<!-- Favorite toggle -->
+			<FavoriteToggleField bind:checked={isFavorite} />
 		</fieldset>
 
 		{#if uploading}

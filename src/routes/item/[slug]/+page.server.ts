@@ -27,6 +27,7 @@ export const actions: Actions = {
 		const amount = Number(formData.get('amount'));
 		const store = Number(formData.get('store'));
 		const cat = Number(formData.get('cat'));
+		const favorite = formData.get('favorite') === 'on';
 
 		// 1. Update basic item details
 		const itemPayload = {
@@ -34,7 +35,8 @@ export const actions: Actions = {
 			note,
 			amount,
 			store_id: store,
-			category_id: cat
+			category_id: cat,
+			favorite
 		};
 
 		const updateResult = await apiRequest(`/items/${id}`, {

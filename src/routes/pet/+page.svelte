@@ -123,7 +123,9 @@
 						>
 							Aktivitäts-Log
 							<svg
-								class="w-4 h-4 transition-transform {expandedLogIds.has(pet.id) ? 'rotate-180' : ''}"
+								class="w-4 h-4 transition-transform {expandedLogIds.has(pet.id)
+									? 'rotate-180'
+									: ''}"
 								fill="none"
 								stroke="currentColor"
 								viewBox="0 0 24 24"

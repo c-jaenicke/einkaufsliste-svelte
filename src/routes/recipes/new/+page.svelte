@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { env } from '$env/dynamic/public';
-	const PUBLIC_API_BASE = env.PUBLIC_API_BASE;
+	import ImageDropzone from '$lib/ImageDropzone.svelte';
+	import IngredientEditor from '$lib/IngredientEditor.svelte';
 
 	const { data } = $props();
 
@@ -8,74 +8,6 @@
 	let recipeName = $state('');
 	let description = $state('');
 	let ingredients = $state<any[]>([]);
-
-	// Temp ingredient row states
-	let ingName = $state('');
-	let ingNote = $state('');
-	let ingAmount = $state(1);
-	let ingStore = $state<number>(1); // default store ID
-	let ingCat = $state<number>(1); // default category ID
-	let suggestions = $state<string[]>([]);
-
-	// Autocomplete fetcher for ingredient name
-	// Autocomplete fetcher with 150ms debounce
-	let debounceTimeout: any;
-	function handleIngInput(e: Event) {
-		const val = (e.target as HTMLInputElement).value;
-		ingName = val;
-		clearTimeout(debounceTimeout);
-		debounceTimeout = setTimeout(async () => {
-			if (val.trim().length > 1) {
-				try {
-					const res = await fetch(`${PUBLIC_API_BASE}/items/suggest?q=${encodeURIComponent(val)}`);
-					if (res.ok) {
-						suggestions = await res.json();
-					}
-				} catch (err) {
-					console.error('Failed to fetch suggestions', err);
-				}
-			} else {
-				suggestions = [];
-			}
-		}, 150);
-	}
-
-	// Suggestion click handler
-	function selectSuggestion(sug: string) {
-		ingName = sug;
-		suggestions = [];
-	}
-
-	// Add/Remove handlers for ingredients array
-	function addIngredient() {
-		if (ingName.trim() === '') return;
-		ingredients.push({
-			name: ingName.trim(),
-			note: ingNote.trim(),
-			amount: ingAmount,
-			store_id: ingStore,
-			category_id: ingCat
-		});
-		// Reset temporary input values
-		ingName = '';
-		ingNote = '';
-		ingAmount = 1;
-		suggestions = [];
-	}
-
-	function removeIngredient(index: number) {
-		ingredients.splice(index, 1);
-	}
-
-	function getStoreName(id: number) {
-		const st = data.stores.find((s: any) => s.id === id);
-		return st ? st.name : 'keiner';
-	}
-
-	function getCategoryName(id: number) {
-		const cat = data.cats.find((c: any) => c.id === id);
-		return cat ? cat.name : 'keine';
-	}
 </script>
 
 <div class="space-y-4">
@@ -114,161 +46,16 @@
 			</label>
 
 			<!-- Image Upload banner selector -->
-			<label class="label">
-				<span class="label-text field-label">Bannersymbol / Bild</span>
-				<div
-					class="bg-surface-200/50 dark:bg-surface-950/40 border border-slate-200 dark:border-slate-850 p-4 rounded-xl flex flex-col items-center justify-center text-center border-dashed w-full"
-				>
-					<svg
-						class="w-8 h-8  dark:text-slate-650 mb-2"
-						fill="none"
-						stroke="currentColor"
-						viewBox="0 0 24 24"
-					>
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="1.5"
-							d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-						/>
-					</svg>
-					<span class=" dark:text-slate-500 font-semibold">Kein Bild ausgewählt</span>
-					<input
-						type="file"
-						name="image"
-						accept="image/*"
-						class="mt-3 block w-full text-slate-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:font-semibold file:bg-slate-100 dark:file:bg-surface-800 file:text-slate-600 dark:file: hover:file:bg-slate-200 cursor-pointer"
-					/>
-				</div>
-			</label>
+			<ImageDropzone label="Bannersymbol / Bild" />
 		</fieldset>
 
 		<hr class="border-slate-200 dark:border-slate-900 my-4" />
 
 		<!-- Ingredients builder -->
 		<div class="space-y-3">
-			<h3 class="font-bold text-slate-500 dark: tracking-wider">
-				Zutaten hinzufügen
-			</h3>
+			<h3 class="font-bold text-slate-500 dark: tracking-wider">Zutaten hinzufügen</h3>
 
-			<!-- Ingredient inputs row -->
-			<div
-				class="bg-surface-200-800/70 border border-slate-200 dark:border-slate-850 p-4 rounded-xl space-y-3"
-			>
-				<!-- Ing Name & Autocomplete -->
-				<div class="space-y-1 relative">
-					<label class="label">
-						<span class="label-text field-label">Zutaten-Name</span>
-						<input
-							type="text"
-							placeholder="z.B. Parmesan"
-							value={ingName}
-							oninput={handleIngInput}
-							class="input field-input"
-						/>
-					</label>
-
-					<!-- Autocomplete suggestion badges -->
-					{#if suggestions.length > 0}
-						<div class="flex flex-wrap gap-1 pt-1 w-full">
-							{#each suggestions as sug}
-								<button
-									type="button"
-									onclick={() => selectSuggestion(sug)}
-									class="btn btn-sm preset-filled-success-500 rounded cursor-pointer"
-								>
-									{sug}
-								</button>
-							{/each}
-						</div>
-					{/if}
-				</div>
-
-				<div class="grid grid-cols-2 gap-2">
-					<label class="label">
-						<span class="label-text field-label">Menge</span>
-						<input
-							type="number"
-							placeholder="z.B. 2"
-							min="1"
-							bind:value={ingAmount}
-							class="input field-input"
-						/>
-					</label>
-					<label class="label">
-						<span class="label-text field-label">Notiz</span>
-						<input
-							type="text"
-							placeholder="z.B. gerieben"
-							bind:value={ingNote}
-							class="input field-input"
-						/>
-					</label>
-				</div>
-
-				<div class="grid grid-cols-2 gap-2">
-					<label class="label">
-						<span class="label-text field-label">Laden</span>
-						<select bind:value={ingStore} class="select field-input cursor-pointer">
-							{#each data.stores as store}
-								<option value={store.id}>{store.name}</option>
-							{/each}
-						</select>
-					</label>
-					<label class="label">
-						<span class="label-text field-label">Kategorie</span>
-						<select bind:value={ingCat} class="select field-input cursor-pointer">
-							{#each data.cats as cat}
-								<option value={cat.id}>{cat.name}</option>
-							{/each}
-						</select>
-					</label>
-				</div>
-
-				<button
-					type="button"
-					onclick={addIngredient}
-					class="btn preset-filled-success-500 w-full py-2 font-bold rounded-lg flex items-center justify-center gap-1 cursor-pointer"
-				>
-					<span>+</span> Zutat zur Liste hinzufügen
-				</button>
-			</div>
-
-			<!-- List of currently added ingredients -->
-			<div class="space-y-1.5">
-				{#each ingredients as ing, i}
-					<div
-						class="flex items-center justify-between gap-3 bg-surface-200-800/70 border border-slate-200 dark:border-slate-850 p-2.5 rounded-lg"
-					>
-						<div class="overflow-hidden flex-1">
-							<p class="font-bold">
-								{ing.amount}x {ing.name}
-								{#if ing.note}
-									<span class=" dark:text-slate-500 italic">("{ing.note}")</span>
-								{/if}
-							</p>
-							<p class="text-slate-500 mt-0.5 truncate">
-								Laden: {getStoreName(ing.store_id)} • Kategorie: {getCategoryName(ing.category_id)}
-							</p>
-						</div>
-						<button
-							type="button"
-							onclick={() => removeIngredient(i)}
-							class="btn-icon preset-filled-error-500 rounded-md cursor-pointer"
-							title="Zutat entfernen"
-						>
-							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="2"
-									d="M6 18L18 6M6 6l12 12"
-								/>
-							</svg>
-						</button>
-					</div>
-				{/each}
-			</div>
+			<IngredientEditor bind:ingredients stores={data.stores} cats={data.cats} />
 		</div>
 
 		<!-- Form Actions conforming to design rules -->

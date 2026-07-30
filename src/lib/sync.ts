@@ -6,9 +6,8 @@ import { env } from '$env/dynamic/public';
 const PUBLIC_API_BASE = env.PUBLIC_API_BASE;
 
 export interface SyncAction {
-	type: 'switch' | 'archive' | 'quickadd';
+	type: 'switch';
 	id?: number;
-	payload?: any;
 	timestamp: number;
 }
 
@@ -65,18 +64,6 @@ export async function processOfflineQueue(onSuccessCallback?: () => void): Promi
 					method: 'PATCH'
 				});
 				if (!res.ok) throw new Error('Failed to toggle item status');
-			} else if (action.type === 'archive') {
-				const res = await fetch(`${PUBLIC_API_BASE}/items/archive`, {
-					method: 'POST'
-				});
-				if (!res.ok) throw new Error('Failed to archive items');
-			} else if (action.type === 'quickadd' && action.payload) {
-				const res = await fetch(`${PUBLIC_API_BASE}/items`, {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify(action.payload)
-				});
-				if (!res.ok) throw new Error('Failed to quick add item');
 			}
 		} catch (err) {
 			console.error('Failed to sync action, keeping in queue:', action, err);

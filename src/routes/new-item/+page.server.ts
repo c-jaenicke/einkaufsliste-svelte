@@ -16,13 +16,15 @@ export const actions: Actions = {
 		const amount = Number(formData.get('amount'));
 		const store = Number(formData.get('store'));
 		const cat = Number(formData.get('cat'));
+		const favorite = formData.get('favorite') === 'on';
 
 		const item = {
 			name,
 			note,
 			amount,
 			store_id: store,
-			category_id: cat
+			category_id: cat,
+			favorite
 		};
 
 		const result = await apiRequest('/items', {

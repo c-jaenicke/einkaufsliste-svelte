@@ -2,12 +2,16 @@
 	import { env } from '$env/dynamic/public';
 	import { invalidateAll } from '$app/navigation';
 	import { submitFormWithProgress, postFormDataWithProgress } from '$lib/uploadForm';
+	import AmountStepper from '$lib/AmountStepper.svelte';
+	import ImageDropzone from '$lib/ImageDropzone.svelte';
+	import FavoriteToggleField from '$lib/FavoriteToggleField.svelte';
 	const PUBLIC_API_BASE = env.PUBLIC_API_BASE;
 
 	const { data } = $props();
 
 	// Svelte 5 reactive amount state
 	let amountItem = $state(data.item.amount);
+	let isFavorite = $state(data.item.favorite);
 	let uploading = $state(false);
 	let uploadProgress = $state(0);
 	let imageUploading = $state(false);
@@ -42,16 +46,6 @@
 			imageError = 'Bild-Upload fehlgeschlagen';
 		} finally {
 			imageUploading = false;
-		}
-	}
-
-	function incrementAmount() {
-		amountItem++;
-	}
-
-	function decreaseAmount() {
-		if (amountItem > 1) {
-			amountItem--;
 		}
 	}
 
@@ -115,32 +109,7 @@
 				<!-- Amount Stepper -->
 				<label class="label">
 					<span class="label-text field-label">Menge</span>
-					<div class="flex items-center gap-3 w-full">
-						<button
-							type="button"
-							onclick={decreaseAmount}
-							class="btn preset-filled-primary-500 w-12 h-12 rounded-xl flex items-center justify-center font-bold active:scale-95 cursor-pointer"
-						>
-							-
-						</button>
-						<input
-							id="amount"
-							name="amount"
-							type="number"
-							required
-							min="1"
-							max="100"
-							bind:value={amountItem}
-							class="input field-input flex-1 text-center font-bold h-12"
-						/>
-						<button
-							type="button"
-							onclick={incrementAmount}
-							class="btn preset-filled-primary-500 w-12 h-12 rounded-xl flex items-center justify-center font-bold active:scale-95 cursor-pointer"
-						>
-							+
-						</button>
-					</div>
+					<AmountStepper bind:value={amountItem} />
 				</label>
 
 				<!-- Store Selector -->
@@ -166,71 +135,22 @@
 				</label>
 
 				<!-- Image Upload / Display Section -->
-				<label class="label pt-2">
-					<span class="label-text field-label">Artikelbild</span>
+				<ImageDropzone
+					label="Artikelbild"
+					emptyText="Kein Bild hochgeladen"
+					existingImageSrc={data.item.image_path
+						? `${PUBLIC_API_BASE}${data.item.image_path}`
+						: null}
+					existingImageAlt={data.item.name}
+					deleteFormAction="?/deleteImage"
+					onchange={handleImageChange}
+					disabled={imageUploading}
+					uploadProgress={imageUploading ? imageUploadProgress : null}
+					error={imageError}
+				/>
 
-					{#if data.item.image_path}
-						<div
-							class="bg-surface-200/50 dark:bg-surface-950/40 border border-slate-200 dark:border-slate-850 p-3.5 rounded-xl space-y-3 w-full"
-						>
-							<img
-								src="{PUBLIC_API_BASE}{data.item.image_path}"
-								alt={data.item.name}
-								class="w-full h-40 object-cover rounded-lg border border-slate-200 dark:border-slate-800"
-							/>
-							<button
-								type="submit"
-								formaction="?/deleteImage"
-								class="btn preset-filled-error-500 w-full py-2 font-bold rounded-lg cursor-pointer"
-							>
-								Bild entfernen
-							</button>
-						</div>
-					{:else}
-						<div
-							class="bg-surface-200/50 dark:bg-surface-950/40 border border-slate-200 dark:border-slate-850 p-4 rounded-xl flex flex-col items-center justify-center text-center border-dashed border-slate-300 dark:border-slate-800 relative w-full"
-						>
-							<svg
-								class="w-8 h-8  dark:text-slate-650 mb-2"
-								fill="none"
-								stroke="currentColor"
-								viewBox="0 0 24 24"
-							>
-								<path
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="1.5"
-									d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-								/>
-							</svg>
-							<span class=" dark:text-slate-500 font-semibold"
-								>Kein Bild hochgeladen</span
-							>
-							<input
-								type="file"
-								name="image"
-								accept="image/*"
-								onchange={handleImageChange}
-								disabled={imageUploading}
-								class="mt-3 block w-full text-slate-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:font-semibold file:bg-slate-100 dark:file:bg-surface-800 file:text-slate-600 dark:file: hover:file:bg-slate-200 cursor-pointer disabled:opacity-50"
-							/>
-							{#if imageUploading}
-								<div class="w-full mt-3">
-									<p class="font-medium">Bild wird hochgeladen… {imageUploadProgress}%</p>
-									<div class="w-full h-2 rounded-full bg-surface-300-700 overflow-hidden mt-1">
-										<div
-											class="h-full bg-success-500 transition-all"
-											style="width: {imageUploadProgress}%"
-										></div>
-									</div>
-								</div>
-							{/if}
-							{#if imageError}
-								<p class="font-medium mt-2 text-error-500">{imageError}</p>
-							{/if}
-						</div>
-					{/if}
-				</label>
+				<!-- Favorite toggle -->
+				<FavoriteToggleField bind:checked={isFavorite} />
 			</fieldset>
 
 			{#if uploading}

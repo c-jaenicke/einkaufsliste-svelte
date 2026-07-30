@@ -15,7 +15,7 @@
 		if (path.startsWith('/recipes/')) return 'Rezept bearbeiten';
 		if (path.startsWith('/recipes')) return 'Rezepte';
 		if (path.startsWith('/meals')) return 'Essensplaner';
-		if (path.startsWith('/pet')) return 'Haustier-Companion';
+		if (path.startsWith('/pet')) return 'Katzen';
 		if (path.startsWith('/new-item')) return 'Neuer Eintrag';
 		if (path.startsWith('/item/')) return 'Eintrag bearbeiten';
 		if (path.startsWith('/more/new/store')) return 'Neuer Laden';
@@ -68,11 +68,11 @@
 </svelte:head>
 
 <div
-	class="app min-h-screen bg-surface-100-900 flex flex-col font-sans select-none transition-colors duration-250"
+	class="app min-h-screen bg-surface-100-900 flex flex-col font-sans transition-colors duration-250"
 >
 	<!-- Fixed Top Header -->
 	<header
-		class="fixed top-0 left-0 right-0 z-40 bg-surface-100-900/90 border-b border-surface-200-800 backdrop-blur-md transition-colors duration-250"
+		class="fixed top-0 left-0 right-0 z-40 bg-surface-100-900/90 border-b border-surface-200-800 backdrop-blur-md transition-colors duration-250 pt-[env(safe-area-inset-top)]"
 	>
 		<div class="max-w-md mx-auto px-4 pt-2 pb-3 flex items-center justify-between">
 			<div class="flex items-center gap-2">
@@ -117,13 +117,16 @@
 	</header>
 
 	<!-- Main Content Area -->
-	<main class="flex-1 w-full max-w-md mx-auto px-4 pt-20 pb-24 box-border flex flex-col">
+	<main
+		class="flex-1 w-full max-w-md mx-auto px-4 box-border flex flex-col"
+		style="padding-top: calc(4rem + env(safe-area-inset-top)); padding-bottom: calc(6rem + env(safe-area-inset-bottom));"
+	>
 		{@render children()}
 	</main>
 
 	<!-- Fixed Bottom Navigation Bar (Footer) -->
 	<nav
-		class="fixed bottom-0 left-0 right-0 z-50 bg-surface-100-900/95 border-t border-surface-200-800 backdrop-blur-md transition-colors duration-250"
+		class="fixed bottom-0 left-0 right-0 z-50 bg-surface-100-900/95 border-t border-surface-200-800 backdrop-blur-md transition-colors duration-250 pb-[env(safe-area-inset-bottom)]"
 	>
 		<div class="max-w-md mx-auto h-16 flex items-center justify-around px-2">
 			<!-- TAB 1: Shopping List -->
@@ -145,27 +148,7 @@
 				<span class="mt-0.5">Liste</span>
 			</a>
 
-			<!-- TAB 2: Recipes -->
-			<a
-				href="/recipes"
-				class="flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all duration-200 {currentPath.startsWith(
-					'/recipes'
-				)
-					? 'text-primary-600 dark:text-primary-400 font-bold scale-105'
-					: 'text-surface-600 dark:text-surface-400 hover:text-primary-600 dark:hover:text-primary-400'}"
-			>
-				<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-					/>
-				</svg>
-				<span class="mt-0.5">Rezepte</span>
-			</a>
-
-			<!-- TAB 3: Essensplaner -->
+			<!-- TAB 2: Essensplaner -->
 			<a
 				href="/meals"
 				class="flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all duration-200 {currentPath.startsWith(
@@ -185,7 +168,7 @@
 				<span class="mt-0.5">Planer</span>
 			</a>
 
-			<!-- TAB 4: Pet Companion -->
+			<!-- TAB 3: Pet Companion -->
 			<a
 				href="/pet"
 				class="flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all duration-200 {currentPath.startsWith(
@@ -202,6 +185,26 @@
 					<ellipse cx="18" cy="10" rx="2" ry="2.6" transform="rotate(20 18 10)" />
 				</svg>
 				<span class="mt-0.5">Katze</span>
+			</a>
+
+			<!-- TAB 4: Recipes -->
+			<a
+				href="/recipes"
+				class="flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all duration-200 {currentPath.startsWith(
+					'/recipes'
+				)
+					? 'text-primary-600 dark:text-primary-400 font-bold scale-105'
+					: 'text-surface-600 dark:text-surface-400 hover:text-primary-600 dark:hover:text-primary-400'}"
+			>
+				<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+					/>
+				</svg>
+				<span class="mt-0.5">Rezepte</span>
 			</a>
 
 			<!-- TAB 5: More / Admin -->
